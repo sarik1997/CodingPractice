@@ -50,21 +50,22 @@ class ShortestPath {
         // Distance of source vertex from itself is always 0
         dist[src] = 0;
 
-        // Find shortest path for all vertices
-        for (int count = 0; count < V - 1; count++) {
+        // Find the shortest path for all vertices
+        for (int i = 0; i < V - 1; i++) {
             // Pick the minimum distance vertex from the set of vertices not yet processed. u is always equal to src in first iteration.
             int u = minDistance(dist, shortestDistanceFinal);
             // Mark the picked vertex as processed
             shortestDistanceFinal[u] = true;
-            System.out.println(u);
-            printSolution(dist);
+//            System.out.println(u);
+//            printSolution(dist);
             // Update dist value of the adjacent vertices of the picked vertex.
             for (int v = 0; v < V; v++)
 
                 // Update dist[v] only if is not in shortestDistanceFinal, there is an edge from u to v, and total weight of path from src to v through u is
                 // smaller than current value of dist[v]
-                if (!shortestDistanceFinal[v] && graph[u][v] != 0 && dist[u] != Integer.MAX_VALUE && dist[u] + graph[u][v] < dist[v])
+                if (!shortestDistanceFinal[v] && graph[u][v] != 0 && dist[u] != Integer.MAX_VALUE && dist[u] + graph[u][v] < dist[v]) {
                     dist[v] = dist[u] + graph[u][v];
+                }
         }
         printSolution(dist);
     }
