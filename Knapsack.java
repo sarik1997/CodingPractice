@@ -2,8 +2,10 @@ import java.util.Arrays;
 
 public class Knapsack {
     public static void main(String[] args) {
-        int[] profit = {60, 100, 120};
-        int[] weight = {10, 20, 30};
+//        int[] profit = {60, 100, 120};
+//        int[] weight = {10, 20, 30};
+        int[] profit = {10, 15, 40};
+        int[] weight = {1, 2, 3};
         int totalWeight = 50;
         System.out.println(knapSack(totalWeight, weight, profit));
     }
