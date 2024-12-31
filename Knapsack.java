@@ -6,7 +6,7 @@ public class Knapsack {
 //        int[] weight = {10, 20, 30};
         int[] profit = {10, 15, 40};
         int[] weight = {1, 2, 3};
-        int totalWeight = 50;
+        int totalWeight = 6;
         System.out.println(knapSack(totalWeight, weight, profit));
     }
 
