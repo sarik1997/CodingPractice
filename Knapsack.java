@@ -10,7 +10,7 @@ public class Knapsack {
         System.out.println(knapSack(totalWeight, weight, profit));
     }
 
-    public static int knapSack(int totalWeight, int[] wt, int[] val) {
+    public static int knapSack(int totalWeight, int[] wt, int[] profit) {
         int n = wt.length;
         int[][] dp = new int[n + 1][totalWeight + 1];
 
@@ -20,7 +20,7 @@ public class Knapsack {
                 if (i == 0 || w == 0)
                     dp[i][w] = 0;
                 else if (wt[i - 1] <= w)
-                    dp[i][w] = Math.max(val[i - 1] + dp[i - 1][w - wt[i - 1]], dp[i - 1][w]);
+                    dp[i][w] = Math.max(profit[i - 1] + dp[i - 1][w - wt[i - 1]], dp[i - 1][w]);
                 else
                     dp[i][w] = dp[i - 1][w];
             }
