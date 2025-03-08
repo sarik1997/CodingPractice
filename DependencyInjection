@@ -1,8 +1,7 @@
 Dependency Injection (DI) - Explained
 
-Dependency Injection (DI) is a design pattern used to implement the Dependency Inversion Principle (DIP). It allows a class to receive its dependencies from an external source, rather than creating them internally.
-
-⸻
+Dependency Injection (DI) is a design pattern used to implement the Dependency Inversion Principle (DIP).
+It allows a class to receive its dependencies from an external source, rather than creating them internally.
 
 Why Use Dependency Injection?
 
@@ -14,16 +13,12 @@ If a class creates its own dependencies, it leads to:
 ❌ Hard to Extend – Need to modify existing code for changes.
 
 Solution? ✅ Use Dependency Injection to pass dependencies externally rather than creating them inside the class.
-
 ⸻
-
 Types of Dependency Injection in Java
 	1.	Constructor Injection (Recommended)
 	2.	Setter Injection
 	3.	Field Injection
-
 ⸻
-
 1. Constructor Injection (Best Practice)
 
 🔹 Injects dependencies via the constructor.
@@ -100,7 +95,6 @@ public class Main {
 ✅ More maintainable – No need to modify OrderService to change the database.
 
 ⸻
-
 2. Setter Injection
 
 🔹 Injects dependencies via setter methods.
