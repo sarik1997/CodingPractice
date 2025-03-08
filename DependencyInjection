@@ -1,0 +1,223 @@
+Dependency Injection (DI) - Explained
+
+Dependency Injection (DI) is a design pattern used to implement the Dependency Inversion Principle (DIP). It allows a class to receive its dependencies from an external source, rather than creating them internally.
+
+⸻
+
+Why Use Dependency Injection?
+
+Problems Without DI
+
+If a class creates its own dependencies, it leads to:
+❌ Tight Coupling – Hard to replace dependencies.
+❌ Difficult Testing – Cannot mock dependencies easily.
+❌ Hard to Extend – Need to modify existing code for changes.
+
+Solution? ✅ Use Dependency Injection to pass dependencies externally rather than creating them inside the class.
+
+⸻
+
+Types of Dependency Injection in Java
+	1.	Constructor Injection (Recommended)
+	2.	Setter Injection
+	3.	Field Injection
+
+⸻
+
+1. Constructor Injection (Best Practice)
+
+🔹 Injects dependencies via the constructor.
+🔹 Ensures immutability (dependencies cannot change after object creation).
+🔹 Recommended for mandatory dependencies.
+
+Example Without DI (Bad)
+class MySQLDatabase {
+    void connect() {
+        System.out.println("Connected to MySQL Database");
+    }
+}
+
+class OrderService {
+    private MySQLDatabase db = new MySQLDatabase(); // Bad: Tight Coupling
+
+    void processOrder() {
+        db.connect();
+        System.out.println("Processing order...");
+    }
+}
+
+❌ Tightly coupled → OrderService cannot use another database without modifying code.
+❌ Hard to test → Cannot inject a mock database.
+
+Fixed Using Constructor Injection (Good)
+
+interface Database {
+    void connect();
+}
+
+class MySQLDatabase implements Database {
+    public void connect() {
+        System.out.println("Connected to MySQL Database");
+    }
+}
+
+class PostgreSQLDatabase implements Database {
+    public void connect() {
+        System.out.println("Connected to PostgreSQL Database");
+    }
+}
+
+// Injecting dependency via Constructor (Best Practice)
+class OrderService {
+    private final Database db;
+
+    public OrderService(Database db) { // Dependency Injection
+        this.db = db;
+    }
+
+    void processOrder() {
+        db.connect();
+        System.out.println("Processing order...");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Database mysql = new MySQLDatabase();
+        OrderService orderService = new OrderService(mysql); // Inject MySQL
+
+        orderService.processOrder();
+
+        Database postgres = new PostgreSQLDatabase();
+        OrderService anotherService = new OrderService(postgres); // Inject PostgreSQL
+
+        anotherService.processOrder();
+    }
+}
+
+✅ Loose coupling – Can switch databases easily.
+✅ Better testability – We can inject a mock database.
+✅ More maintainable – No need to modify OrderService to change the database.
+
+⸻
+
+2. Setter Injection
+
+🔹 Injects dependencies via setter methods.
+🔹 Useful for optional dependencies.
+🔹 Allows changing dependencies at runtime.
+
+class OrderService {
+    private Database db;
+
+    public void setDatabase(Database db) { // Setter Injection
+        this.db = db;
+    }
+
+    void processOrder() {
+        if (db == null) {
+            System.out.println("No database set!");
+            return;
+        }
+        db.connect();
+        System.out.println("Processing order...");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        OrderService orderService = new OrderService();
+        orderService.setDatabase(new MySQLDatabase()); // Injecting dependency
+        orderService.processOrder();
+    }
+}
+✅ Flexible – Can change dependencies at runtime.
+❌ Allows null values – Risk of NullPointerException if not set.
+
+⸻
+
+3. Field Injection (Avoid if Possible)
+
+🔹 Uses @Autowired in Spring to inject dependencies directly into fields.
+🔹 Not recommended for mandatory dependencies because it hides dependencies.
+class OrderService {
+    @Autowired // Spring will automatically inject the dependency
+    private Database db;
+
+    void processOrder() {
+        db.connect();
+        System.out.println("Processing order...");
+    }
+}
+
+❌ Not recommended for non-Spring applications.
+❌ Hidden dependencies – No way to know required dependencies from the constructor.
+
+⸻
+
+Dependency Injection in Spring Boot
+
+Using Spring Framework to Inject Dependencies
+
+Spring Boot manages dependencies using @Component, @Service, @Repository, and @Autowired.
+
+Step 1: Define the Dependency
+
+import org.springframework.stereotype.Component;
+
+@Component
+class MySQLDatabase implements Database {
+    public void connect() {
+        System.out.println("Connected to MySQL Database");
+    }
+}
+Step 2: Inject the Dependency into a Service
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+class OrderService {
+    private final Database db;
+
+    @Autowired // Spring injects the dependency
+    public OrderService(Database db) {
+        this.db = db;
+    }
+
+    public void processOrder() {
+        db.connect();
+        System.out.println("Processing order...");
+    }
+}
+Step 3: Run Spring Boot Application
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
+
+@SpringBootApplication
+public class Main {
+    public static void main(String[] args) {
+        ApplicationContext context = SpringApplication.run(Main.class, args);
+
+        OrderService orderService = context.getBean(OrderService.class);
+        orderService.processOrder();
+    }
+}
+✅ Spring automatically injects dependencies.
+✅ No need to manually instantiate objects.
+
+⸻
+
+When to Use Each Injection Type?
+Type                                   Best Use Case                       Pros                           Cons
+Constructor Injection (Recommended)   Required dependencies      Ensures immutability, easy testing    More boilerplate
+Setter Injection                      Optional dependencies      More flexibility                     Allows null values
+Field Injection                       Spring Boot applications   Less code                    Hard to test, hidden dependencies
+
+
+Final Takeaways
+
+✅ Dependency Injection reduces tight coupling and makes code flexible, testable, and maintainable.
+✅ Constructor Injection is best for required dependencies.
+✅ Spring Boot makes DI easier with @Autowired and @Component annotations.

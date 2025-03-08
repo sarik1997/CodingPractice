@@ -1,0 +1,368 @@
+SOLID Principles - Explained with Examples
+
+The SOLID principles are five key design principles in object-oriented programming (OOP) that help create scalable,
+maintainable, and flexible software.
+
+
+Principle                                           Meaning
+S - Single Responsibility Principle (SRP)           A class should have only one reason to change.
+O - Open/Closed Principle (OCP)                     Code should be open for extension, but closed for modification.
+L - Liskov Substitution Principle (LSP)             Subclasses should be replaceable for base classes without breaking the application.
+I - Interface Segregation Principle (ISP)           No unnecessary methods in an interface; create smaller, specific interfaces.
+D - Dependency Inversion Principle (DIP)            Depend on abstractions, not concrete implementations.
+
+
+1. Single Responsibility Principle (SRP)
+
+Definition
+
+👉 A class should have only one reason to change.
+👉 It should perform only one responsibility.
+
+❌ Bad Example (Violating SRP)
+
+Here, OrderService handles both business logic & database operations (two responsibilities).
+class OrderService {
+    void processOrder(String order) {
+        System.out.println("Processing order: " + order);
+        saveToDatabase(order);
+    }
+
+    void saveToDatabase(String order) {
+        System.out.println("Saving order to database: " + order);
+    }
+}
+
+🚨 Problem: If we change the database logic, we must modify OrderService, violating SRP.
+
+⸻
+
+✅ Good Example (Following SRP)
+
+👉 Separate responsibilities into different classes.
+
+class OrderRepository {  // Handles database operations
+    void saveOrder(String order) {
+        System.out.println("Saving order to database: " + order);
+    }
+}
+
+class OrderService {  // Handles business logic
+    private final OrderRepository repository;
+
+    public OrderService(OrderRepository repository) {
+        this.repository = repository;
+    }
+
+    void processOrder(String order) {
+        System.out.println("Processing order: " + order);
+        repository.saveOrder(order);
+    }
+}
+✅ OrderService is now responsible only for processing orders.
+✅ OrderRepository handles database operations separately.
+
+⸻
+
+2. Open/Closed Principle (OCP)
+
+Definition
+
+👉 Code should be open for extension, but closed for modification.
+👉 New features should be added without modifying existing code.
+
+❌ Bad Example (Violating OCP)
+
+Adding new discount types modifies the existing class.
+class DiscountService {
+    double getDiscount(String type, double price) {
+        if (type.equals("NewCustomer")) return price * 0.9;
+        if (type.equals("LoyalCustomer")) return price * 0.8;
+        return price;
+    }
+}
+🚨 Problem: Every time a new discount type is added, we must modify DiscountService.
+
+⸻
+
+✅ Good Example (Following OCP)
+
+👉 Use inheritance or strategy pattern to extend behavior.
+interface Discount {
+    double apply(double price);
+}
+
+class NewCustomerDiscount implements Discount {
+    public double apply(double price) {
+        return price * 0.9;
+    }
+}
+
+class LoyalCustomerDiscount implements Discount {
+    public double apply(double price) {
+        return price * 0.8;
+    }
+}
+
+class DiscountService {
+    public double applyDiscount(Discount discount, double price) {
+        return discount.apply(price);
+    }
+}
+✅ New discounts can be added without modifying DiscountService.
+✅ Follows OCP by using abstraction (Discount).
+
+⸻
+
+3. Liskov Substitution Principle (LSP)
+
+Definition
+
+👉 A subclass should be replaceable for its base class without breaking the application.
+
+❌ Bad Example (Violating LSP)
+
+Here, ElectricCar throws an exception when calling refuel(), breaking substitution.
+
+class Car {
+    void refuel() {
+        System.out.println("Refueling...");
+    }
+}
+
+class ElectricCar extends Car {
+    @Override
+    void refuel() { // 🚨 Violates LSP: Electric cars don't use fuel!
+        throw new UnsupportedOperationException("Electric cars don't need refueling!");
+    }
+}
+
+🚨 Problem: The base class expects all subclasses to support refuel(), but ElectricCar doesn’t.
+
+⸻
+
+✅ Good Example (Following LSP)
+
+👉 Use separate base classes for different behaviors.
+
+abstract class Vehicle {}
+
+class FuelCar extends Vehicle {
+    void refuel() {
+        System.out.println("Refueling car...");
+    }
+}
+
+class ElectricCar extends Vehicle {
+    void charge() {
+        System.out.println("Charging electric car...");
+    }
+}
+✅ Now, ElectricCar and FuelCar follow LSP.
+✅ No broken functionality when substituting base class.
+
+⸻
+
+4. Interface Segregation Principle (ISP)
+
+Definition
+
+👉 A class should not be forced to implement unnecessary methods.
+👉 Instead of one large interface, create multiple smaller interfaces.
+
+❌ Bad Example (Violating ISP)
+
+Here, Penguin is forced to implement fly(), which it cannot use.
+
+interface Bird {
+    void fly();
+    void eat();
+}
+
+class Penguin implements Bird {
+    public void fly() {  // 🚨 Penguins can't fly!
+        throw new UnsupportedOperationException();
+    }
+
+    public void eat() {
+        System.out.println("Penguin is eating...");
+    }
+}
+
+🚨 Problem: Penguin must implement fly(), even though it doesn’t apply.
+
+⸻
+
+✅ Good Example (Following ISP)
+
+👉 Split interfaces into smaller, more relevant ones.
+
+interface FlyingBird {
+    void fly();
+}
+
+interface NonFlyingBird {
+    void walk();
+}
+
+interface Bird {
+    void eat();
+}
+
+class Sparrow implements Bird, FlyingBird {
+    public void eat() {
+        System.out.println("Sparrow is eating...");
+    }
+    public void fly() {
+        System.out.println("Sparrow is flying...");
+    }
+}
+
+class Penguin implements Bird, NonFlyingBird {
+    public void eat() {
+        System.out.println("Penguin is eating...");
+    }
+    public void walk() {
+        System.out.println("Penguin is walking...");
+    }
+}
+
+✅ No unnecessary methods in Penguin.
+✅ Each class implements only what it needs.
+
+⸻
+
+5. Dependency Inversion Principle (DIP)
+
+Definition
+
+👉 Depend on abstractions, not concrete implementations.
+👉 High-level modules should not depend on low-level modules.
+
+The Dependency Inversion Principle (DIP) is one of the five SOLID principles in object-oriented design.
+ It helps create loosely coupled, maintainable, and scalable software.
+Definition
+
+The Dependency Inversion Principle states:
+	1.	High-level modules should not depend on low-level modules. Both should depend on abstractions.
+	2.	Abstractions should not depend on details. Details should depend on abstractions.
+
+🔹 High-level modules → Business logic, core functionalities
+🔹 Low-level modules → Database access, file handling, external APIs
+
+Instead of directly depending on concrete implementations, both should rely on interfaces or abstract classes.
+
+⸻
+
+Why is DIP Important?
+
+Without DIP, high-level modules are tightly coupled to low-level implementations, making the system hard to modify and test. DIP ensures:
+✅ Loose coupling – Code is flexible and easier to change.
+✅ Better testability – You can replace dependencies with mock implementations.
+✅ Scalability – You can introduce new implementations without modifying existing code.
+
+⸻
+
+Example Without DIP (Bad Practice)
+
+Here, the OrderService directly depends on MySQLDatabase, making it tightly coupled to a specific database.
+class MySQLDatabase {
+    void saveOrder(String order) {
+        System.out.println("Order saved to MySQL Database: " + order);
+    }
+}
+
+class OrderService {
+    private MySQLDatabase db = new MySQLDatabase(); // Direct dependency (Bad)
+
+    void placeOrder(String order) {
+        db.saveOrder(order); // Tightly coupled to MySQLDatabase
+        System.out.println("Order placed: " + order);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        OrderService orderService = new OrderService();
+        orderService.placeOrder("Laptop");
+    }
+}
+
+Problems:
+
+❌ OrderService is tightly coupled to MySQLDatabase.
+❌ If we want to switch to PostgreSQLDatabase, we need to modify OrderService.
+❌ Difficult to unit test (MySQLDatabase cannot be easily mocked).
+
+⸻
+
+Example With DIP (Good Practice)
+
+We use an interface (Database) and let OrderService depend on the abstraction instead of a concrete class.
+
+// High-level module depends on abstraction
+interface Database {
+    void saveOrder(String order);
+}
+
+// Low-level modules implement abstraction
+class MySQLDatabase implements Database {
+    public void saveOrder(String order) {
+        System.out.println("Order saved to MySQL Database: " + order);
+    }
+}
+
+class PostgreSQLDatabase implements Database {
+    public void saveOrder(String order) {
+        System.out.println("Order saved to PostgreSQL Database: " + order);
+    }
+}
+
+// OrderService depends on abstraction (DIP Applied)
+class OrderService {
+    private Database db;
+
+    // Dependency Injection via constructor
+    public OrderService(Database db) {
+        this.db = db;
+    }
+
+    void placeOrder(String order) {
+        db.saveOrder(order);
+        System.out.println("Order placed: " + order);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Database mysql = new MySQLDatabase();
+        OrderService orderService = new OrderService(mysql); // Inject dependency
+        orderService.placeOrder("Laptop");
+
+        Database postgres = new PostgreSQLDatabase();
+        OrderService anotherService = new OrderService(postgres); // Switch DB easily
+        anotherService.placeOrder("Phone");
+    }
+}
+
+Advantages (DIP Applied)
+
+✅ OrderService depends on Database (an interface) instead of MySQLDatabase (implementation).
+✅ Easier to switch databases without modifying OrderService.
+✅ Unit tests can use a mock database (MockDatabase implementing Database).
+✅ Extensible – We can add MongoDBDatabase without changing existing code.
+
+⸻
+
+Summary
+Without DIP (Bad)                                                           With DIP (Good)
+High-level module depends on low-level module                           High-level module depends on an interface (abstraction)
+Tight coupling                                                          Loose coupling
+Hard to modify and extend                                               Easy to switch implementations
+Difficult to test                                                       Easy to unit test
+
+Key Takeaways
+
+✅ Use interfaces or abstract classes to decouple high-level and low-level modules.
+✅ Inject dependencies instead of creating them inside the class (Dependency Injection).
+✅ Follow DIP to make your code modular, testable, and flexible.
