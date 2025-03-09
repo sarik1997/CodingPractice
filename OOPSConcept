@@ -1,0 +1,232 @@
+Object-Oriented Programming (OOP) is a programming paradigm based on the concept of objects.
+The four main OOP principles are:
+
+Concept                         Definition
+Encapsulation                   Hiding data by making it private and using getters/setters.
+Abstraction                     Hiding implementation details and exposing only the necessary functionality.
+Inheritance                     Allowing a class to inherit properties and behavior from another class.
+Polymorphism                    The ability to take multiple forms: method overloading and method overriding.
+
+1. Encapsulation (Data Hiding)
+
+Encapsulation means restricting direct access to object data and allowing access through methods.
+
+Example:
+class BankAccount {
+    private double balance;  // Private variable (data hiding)
+
+    public BankAccount(double balance) {
+        this.balance = balance;
+    }
+
+    // Getter method (read balance)
+    public double getBalance() {
+        return balance;
+    }
+
+    // Setter method (update balance safely)
+    public void deposit(double amount) {
+        if (amount > 0) {
+            balance += amount;
+        }
+    }
+}
+Why is Encapsulation Useful?
+✅ Prevents direct modification of balance.
+✅ Ensures valid state (e.g., cannot set negative balance).
+
+2. Abstraction (Hiding Implementation Details)
+
+Abstraction means hiding complex implementation and exposing only the required functionality.
+
+Example:
+abstract class Vehicle {
+    abstract void start();  // Abstract method (no implementation)
+}
+
+class Car extends Vehicle {
+    @Override
+    void start() {
+        System.out.println("Car is starting with a key.");
+    }
+}
+
+class ElectricCar extends Vehicle {
+    @Override
+    void start() {
+        System.out.println("Electric car is starting with a button.");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Vehicle myCar = new Car();
+        myCar.start();  // "Car is starting with a key."
+
+        Vehicle myEV = new ElectricCar();
+        myEV.start();  // "Electric car is starting with a button."
+    }
+}
+
+Why is Abstraction Useful?
+✅ Hides unnecessary details (how the car starts).
+✅ Allows multiple implementations (Car and ElectricCar).
+
+3. Inheritance (Code Reusability)
+
+Inheritance allows a class (child) to inherit properties and methods from another class (parent).
+
+Example:
+class Animal {
+    void makeSound() {
+        System.out.println("Some sound...");
+    }
+}
+// Dog inherits from Animal
+class Dog extends Animal {
+    @Override
+    void makeSound() {
+        System.out.println("Bark! Bark!");
+    }
+}
+// Cat inherits from Animal
+class Cat extends Animal {
+    @Override
+    void makeSound() {
+        System.out.println("Meow! Meow!");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Animal myDog = new Dog();
+        myDog.makeSound();  // "Bark! Bark!"
+
+        Animal myCat = new Cat();
+        myCat.makeSound();  // "Meow! Meow!"
+    }
+}
+
+Why is Inheritance Useful?
+
+✅ Code reusability – Dog and Cat inherit common behavior from Animal.
+✅ Easy maintenance – Change in Animal affects all subclasses.
+
+4. Polymorphism (Multiple Forms)
+
+Polymorphism allows one interface to be used for multiple implementations.
+There are two types:
+	•	Method Overloading (Compile-time polymorphism)
+	•	Method Overriding (Runtime polymorphism)
+
+(a) Method Overloading (Same method name, different parameters)
+
+class MathUtils {
+    // Add two numbers
+    int add(int a, int b) {
+        return a + b;
+    }
+
+    // Add three numbers
+    int add(int a, int b, int c) {
+        return a + b + c;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        MathUtils math = new MathUtils();
+        System.out.println(math.add(5, 10));       // Output: 15
+        System.out.println(math.add(5, 10, 20));   // Output: 35
+    }
+}
+
+✅ Compile-time polymorphism – The correct add() method is chosen based on arguments.
+
+⸻
+
+(b) Method Overriding (Same method, different behavior in subclasses)
+
+class Parent {
+    void showMessage() {
+        System.out.println("Message from Parent");
+    }
+}
+
+class Child extends Parent {
+    @Override
+    void showMessage() {
+        System.out.println("Message from Child");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Parent obj = new Child();
+        obj.showMessage();  // "Message from Child"
+    }
+}
+✅ Runtime polymorphism – The overridden method in Child is executed.
+
+
+Scenario                                Object Created                      Method Called
+Parent obj = new Parent();              Parent Object                       Calls Parent method
+Child obj = new Child();                Child Object                        Calls Child method
+Parent obj = new Child();               Parent Reference, Child Object      Calls Child method (Dynamic Dispatch)
+super.showMessage();                    Inside Overridden Method            Calls Parent method
+(inside child class) :- super can only be used inside a subclass method not form main method
+
+class Parent {
+    void showMessage() {
+        System.out.println("Message from Parent");
+    }
+}
+
+class Child extends Parent {
+    @Override
+    void showMessage() {
+        System.out.println("Message from Child");
+        super.showMessage();  // Calling Parent's method
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Child obj = new Child();
+        obj.showMessage();
+    }
+}
+output:
+Message from Child
+Message from Parent
+
+Another Example: Using Constructor with super()
+
+If the parent class has a constructor and the child needs to call it, use super() in the constructor
+class Parent {
+    Parent() {
+        System.out.println("Parent Constructor");
+    }
+}
+
+class Child extends Parent {
+    Child() {
+        super();  // Calls Parent class constructor
+        System.out.println("Child Constructor");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Child obj = new Child();
+    }
+}
+output:
+Parent Constructor
+Child Constructor
+
+
+Key Takeaways
+	•	Use super.methodName() to call parent class’s method inside an overridden method.
+	•	Use super() to call parent class’s constructor in a child class.
+	•	super helps reuse parent class behavior instead of completely replacing it.
