@@ -1,4 +1,5 @@
-public class FindPallindrome {
+public class FindPalindrome {
+
         public static void main(String[] args) {
             Solution sol = new Solution();
 

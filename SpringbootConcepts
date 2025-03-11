@@ -1,0 +1,44 @@
+1. @PathVariable
+	•	Used to extract values from the URI path.
+	•	Suitable when the value is part of the URL structure.
+	•	Helps in RESTful APIs where the URL represents resources.
+
+Example:
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    @GetMapping("/{id}")
+    public String getUserById(@PathVariable Long id) {
+        return "User ID: " + id;
+    }
+}
+Request:
+GET /users/5
+Output:
+User ID: 5
+
+2. @RequestParam
+	•	Used to extract values from query parameters in the URL.
+	•	Suitable for optional or additional filtering criteria.
+	•	Often used in search and filter operations.
+
+Example:
+@RestController
+@RequestMapping("/users")
+public class UserController {
+
+    @GetMapping("/search")
+    public String searchUsers(@RequestParam String name, @RequestParam(required = false) Integer age) {
+        return "Searching for user: " + name + ", Age: " + age;
+    }
+}
+Request:
+GET /users/search?name=John&age=30
+Output:
+Searching for user: John, Age: 30
+
+Request without age (optional param):
+GET /users/search?name=John
+Output:
+Searching for user: John, Age: null
