@@ -8,7 +8,7 @@ public class PermutationString {
             result += str.charAt(i);
             mf(str.substring(0, i ) + str.substring(i+1,str.length()), result);
             result = result.substring(0, result.length() - 1);
-        }s
+        }
     }
 
     public static void main(String args[]){
