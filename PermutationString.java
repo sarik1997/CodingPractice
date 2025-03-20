@@ -1,4 +1,5 @@
 public class PermutationString {
+    static  int counter =0;
     public static void mf(String str, String result) {
         if (str.equals("")) {
             System.out.println(result);

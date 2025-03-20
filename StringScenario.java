@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Test {
+public class StringScenario {
     public static void main(String[] args) {
         Map<Character, Integer> hashMap = new HashMap<>();
         //new keyword will store it in heap-memory

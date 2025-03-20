@@ -1,0 +1,300 @@
+Authentication and authorization in Spring Boot can be implemented using Spring Security,
+which provides a robust framework for securing applications.
+1. Authentication vs Authorization
+	•	Authentication: Verifying who a user is (e.g., login with username & password).
+	•	Authorization: Determining what a user can access (e.g., role-based access control).
+Setting Up Authentication and Authorization in Spring Boot
+
+Spring Security provides built-in support for authentication and authorization.
+Dependencies
+
+For Spring Boot 3+, use:
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>org.springframework.security.oauth.boot</artifactId>
+    <version>2.3.6.RELEASE</version>
+</dependency>
+
+2.2 Configure Spring Security
+
+Spring Boot 3+ uses Spring Security 6, which requires configuring SecurityFilterChain instead of WebSecurityConfigurerAdapter.
+
+Basic Authentication
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())  // Disable CSRF for simplicity
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/user/**").hasRole("USER")
+                .requestMatchers("/public/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .httpBasic(Customizer.withDefaults()); // Basic Authentication
+        return http.build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        UserDetails user = User.withUsername("user")
+                .password("{noop}password") // No encoding for simplicity
+                .roles("USER")
+                .build();
+        UserDetails admin = User.withUsername("admin")
+                .password("{noop}admin")
+                .roles("ADMIN")
+                .build();
+        return new InMemoryUserDetailsManager(user, admin);
+    }
+}
+	•	The above code:
+	•	Configures Basic Authentication.
+	•	Defines users in-memory (not from a database).
+	•	Restricts /admin/** to ADMIN and /user/** to USER roles.
+
+
+ Using JWT for Authentication (Stateless)
+
+For token-based authentication, use JWT (JSON Web Token).
+
+Add JWT Dependencies
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt</artifactId>
+    <version>0.11.5</version>
+</dependency>
+
+JWT Token Utility Class
+@Component
+public class JwtUtil {
+    private final String SECRET_KEY = "mysecretkey";
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = Jwts.parser()
+            .setSigningKey(SECRET_KEY)
+            .parseClaimsJws(token)
+            .getBody();
+        return claimsResolver.apply(claims);
+    }
+
+    public String generateToken(String username) {
+        return Jwts.builder()
+            .setSubject(username)
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+            .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+            .compact();
+    }
+}
+JWT Authentication Filter
+
+@Component
+public class JwtRequestFilter extends OncePerRequestFilter {
+
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
+
+    public JwtRequestFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+        this.jwtUtil = jwtUtil;
+        this.userDetailsService = userDetailsService;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws ServletException, IOException {
+
+        final String authorizationHeader = request.getHeader("Authorization");
+
+        String username = null;
+        String jwt = null;
+
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            jwt = authorizationHeader.substring(7);
+            username = jwtUtil.extractUsername(jwt);
+        }
+
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            if (jwtUtil.extractUsername(jwt).equals(userDetails.getUsername())) {
+                // Authenticate user
+                SecurityContextHolder.getContext().setAuthentication(
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities()));
+            }
+        }
+        chain.doFilter(request, response);
+    }
+}
+Security Configuration for JWT
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final JwtRequestFilter jwtRequestFilter;
+
+    public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
+        this.jwtRequestFilter = jwtRequestFilter;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/authenticate").permitAll()
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
+}
+
+Authorization in Spring Boot
+
+Authorization in Spring Boot defines what a user can do after authentication. It restricts access to resources based on roles or permissions.
+
+⸻
+
+Types of Authorization
+	1.	Role-Based Access Control (RBAC) → Uses roles like ADMIN, USER, etc.
+	2.	Permission-Based Access Control (PBAC) → Grants specific actions like READ, WRITE, etc.
+	3.	Attribute-Based Access Control (ABAC) → Uses user attributes (e.g., department, location).
+
+⸻
+
+Role-Based Authorization
+Define Roles & Permissions
+
+We define users with roles (USER, ADMIN) in an in-memory store for simplicity.
+
+Security Configuration (Spring Boot 3+)
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/admin/**").hasRole("ADMIN") // Only Admin can access
+                .requestMatchers("/user/**").hasRole("USER")  // Only User can access
+                .requestMatchers("/public/**").permitAll()   // Publicly accessible
+                .anyRequest().authenticated()
+            )
+            .httpBasic(Customizer.withDefaults()); // Use Basic Authentication
+
+        return http.build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        UserDetails user = User.withUsername("user")
+                .password("{noop}password") // No password encoding for demo
+                .roles("USER")
+                .build();
+        UserDetails admin = User.withUsername("admin")
+                .password("{noop}admin")
+                .roles("ADMIN")
+                .build();
+        return new InMemoryUserDetailsManager(user, admin);
+    }
+}
+✅ This configuration:
+	•	Restricts /admin/** to ADMIN only.
+	•	Restricts /user/** to USER.
+	•	Allows /public/** for everyone.
+
+⸻
+
+4. Authorization Using Annotations
+
+Instead of configuring security in SecurityFilterChain, we can use method-level authorization.
+
+Step 3: Enable Method-Level Security
+
+Modify your security configuration:
+@RestController
+@RequestMapping("/api")
+public class DemoController {
+
+    @GetMapping("/public")
+    public String publicEndpoint() {
+        return "Public content, accessible by anyone.";
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/user")
+    public String userEndpoint() {
+        return "Hello, USER! You can access this.";
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin")
+    public String adminEndpoint() {
+        return "Hello, ADMIN! You can access this.";
+    }
+}
+✅ Now:
+	•	/api/public → Anyone can access.
+	•	/api/user → Only users with USER role can access.
+	•	/api/admin → Only admins can access.
+
+⸻
+
+5. Using Permission-Based Authorization
+
+Instead of roles, we can grant specific permissions.
+
+Step 5: Use @PreAuthorize for Fine-Grained Permissions
+
+@PreAuthorize("hasAuthority('READ_PRIVILEGE')")
+@GetMapping("/read")
+public String readData() {
+    return "You have read access!";
+}
+
+@PreAuthorize("hasAuthority('WRITE_PRIVILEGE')")
+@PostMapping("/write")
+public String writeData() {
+    return "You have write access!";
+}
+✅ This ensures:
+	•	Users with READ_PRIVILEGE can read data.
+	•	Users with WRITE_PRIVILEGE can write data.
+
+
+Authorization with JWT (Token-Based)
+
+For stateless authentication, we use JWT (JSON Web Token).
+
+

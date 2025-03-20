@@ -13,8 +13,11 @@ class HeapKthSmallestLargest {
     }
     public static int kthLargest(Integer[] nums, int k) {
         PriorityQueue<Integer> queue = new PriorityQueue<Integer>();
+
         for (int i = 0; i < nums.length; i++) {
             queue.offer(nums[i]);
+            //so if size is getting bigger than k then removing smallest element so
+            // that the first element will always be the kth largest element
             if (queue.size() > k)
                 queue.poll();
         }

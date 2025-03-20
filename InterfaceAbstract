@@ -1,0 +1,191 @@
+Abstract Class                                                                                  Interface
+A class that can have both abstract (unimplemented) and concrete (implemented) methods.         A blueprint of a class that only contains
+                                                                                                abstract methods (before Java 8),
+                                                                                                but can have default/static methods (from Java 8+).
+
+Cannot extend multiple classes (supports single inheritance).                                   Can implement multiple interfaces, allowing multiple inheritance.
+
+Can have both abstract and fully implemented methods.                                           Before Java 8: only abstract methods.
+                                                                                                Java 8+: Can have default and static methods with implementations.
+Can be public, protected, or private.                                                           Methods are public by default (except private methods in Java 9+).
+
+Can have instance variables (with any access modifier).                                         Only public static final (constants) are allowed.
+
+Can have constructors to initialize fields.                                                     Cannot have constructors
+                                                                                                (since an interface cannot have instance fields).
+
+Used when classes share common behavior but also need to have their own implementations.        Used when unrelated classes need to
+                                                                                                follow the same contract (method signatures).
+
+When you want to create a base class with common code and allow subclasses to extend it.        When you want to enforce a contract that multiple
+                                                                                                classes can follow, even if they are unrelated.
+
+1. Abstract Class Example
+abstract class Animal {
+    String name;
+
+    Animal(String name) {
+        this.name = name;
+    }
+
+    abstract void makeSound(); // Abstract method
+
+    void sleep() { // Concrete method
+        System.out.println(name + " is sleeping...");
+    }
+}
+
+class Dog extends Animal {
+    Dog(String name) {
+        super(name);
+    }
+
+    void makeSound() {
+        System.out.println(name + " barks!");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Dog dog = new Dog("Buddy");
+        dog.makeSound(); // "Buddy barks!"
+        dog.sleep(); // "Buddy is sleeping..."
+    }
+}
+
+
+2. INTERFACE EXAMPLE
+interface Animal {
+    void makeSound(); // Abstract method
+}
+
+interface Pet {
+    void play();
+}
+
+class Dog implements Animal, Pet {
+    public void makeSound() {
+        System.out.println("Dog barks!");
+    }
+
+    public void play() {
+        System.out.println("Dog is playing!");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Dog dog = new Dog();
+        dog.makeSound(); // "Dog barks!"
+        dog.play(); // "Dog is playing!"
+    }
+}
+
+
+When to Use What?
+
+✅ Use an abstract class when:
+	•	You have a base class with common logic that should be shared by subclasses.
+	•	You need instance variables and constructors.
+	•	You want to partially implement some methods.
+
+✅ Use an interface when:
+	•	You want multiple classes (even unrelated ones) to follow the same method contract.
+	•	You need multiple inheritance (since a class can implement multiple interfaces).
+	•	You want to define constants (since interfaces allow only public static final variables).
+
+
+
+In Java, a class (including an abstract class) cannot extend multiple classes due to the diamond problem and to maintain simplicity and clarity in the language’s design. However, you can achieve similar functionality using interfaces and composition. Let’s break this down:
+
+⸻
+
+1. The Diamond Problem
+
+If Java allowed multiple inheritance with classes, it would create ambiguity. Consider this example:
+
+class A {
+    void show() {
+        System.out.println("A");
+    }
+}
+
+class B extends A {
+    void show() {
+        System.out.println("B");
+    }
+}
+
+class C extends A {
+    void show() {
+        System.out.println("C");
+    }
+}
+
+// What happens if D extends both B and C?
+class D extends B, C {  // NOT ALLOWED in Java
+    // Conflict! Should D inherit show() from B or C?
+}
+	If D extends both B and C, and both override the show() method from A, then which implementation should D inherit?
+	•	This is called the diamond problem, and Java avoids it by not allowing multiple class inheritance.
+
+⸻
+
+2. Interfaces Solve the Problem
+
+Java allows multiple inheritance through interfaces because interfaces do not store implementation details.
+interface A {
+    void show();
+}
+
+interface B {
+    void display();
+}
+
+class C implements A, B {
+    public void show() {
+        System.out.println("Show from A");
+    }
+
+    public void display() {
+        System.out.println("Display from B");
+    }
+}
+
+Since interfaces only contain method declarations (or default methods with implementation), no ambiguity arises.
+
+⸻
+
+3. Use Composition Instead
+
+If you need functionality from multiple classes, you can use composition instead of multiple inheritance.
+
+class A {
+    void show() {
+        System.out.println("Show from A");
+    }
+}
+
+class B {
+    void display() {
+        System.out.println("Display from B");
+    }
+}
+
+class C {
+    A a = new A();
+    B b = new B();
+
+    void useMethods() {
+        a.show();
+        b.display();
+    }
+}
+Here, C “has-a” relationship with A and B instead of “is-a”, solving the problem elegantly.
+
+⸻
+
+Conclusion
+	•	Java does not allow multiple class inheritance to avoid ambiguity (diamond problem).
+	•	Java allows multiple interfaces because they don’t store state.
+	•	Composition is an alternative when you need functionality from multiple classes.

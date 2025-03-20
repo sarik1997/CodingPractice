@@ -1,0 +1,297 @@
+Functional Interface in Java (Java 8+)
+
+A functional interface in Java is an interface that has exactly one abstract method. It can have multiple default or static methods but only one abstract method.
+
+💡 Key Use: Functional interfaces are used in lambda expressions and method references to provide clean, concise, and readable code.
+
+⸻
+
+1️⃣ Functional Interface Example
+@FunctionalInterface
+interface MyFunctionalInterface {
+    void show(); // Single abstract method
+}
+
+public class Main {
+    public static void main(String[] args) {
+        // Using Lambda Expression
+        MyFunctionalInterface obj = () -> System.out.println("Hello from Functional Interface!");
+        obj.show(); // Output: Hello from Functional Interface!
+    }
+}
+
+👉 Lambda expressions work with functional interfaces because they have only one abstract method.
+
+⸻
+
+2️⃣ @FunctionalInterface Annotation
+	•	@FunctionalInterface is optional but recommended.
+	•	It ensures the interface has only one abstract method.
+	•	If you add a second abstract method, the compiler throws an error.
+
+	@FunctionalInterface
+    interface Demo {
+        void display(); // Only one abstract method allowed
+
+        default void sayHello() {
+            System.out.println("Hello from default method!");
+        }
+    }
+
+    ✅ Allowed: Default methods do not break functional interface rules.
+
+    🚨 Not Allowed:
+    @FunctionalInterface
+    interface InvalidInterface {
+        void method1();
+        void method2(); // ❌ Compilation Error (More than one abstract method)
+    }
+3️⃣ Predefined Functional Interfaces in Java (java.util.function)
+
+Java provides several built-in functional interfaces in the java.util.function package.
+
+✔ Predicate<T> – Takes an input and returns true or false
+import java.util.function.Predicate;
+
+public class Main {
+    public static void main(String[] args) {
+        Predicate<Integer> isEven = num -> num % 2 == 0;
+        System.out.println(isEven.test(10)); // Output: true
+        System.out.println(isEven.test(5));  // Output: false
+    }
+}
+
+✔ Function<T, R> – Takes an input and returns a result
+
+import java.util.function.Function;
+
+public class Main {
+    public static void main(String[] args) {
+        Function<String, Integer> lengthFunction = str -> str.length();
+        System.out.println(lengthFunction.apply("Java")); // Output: 4
+    }
+}
+
+✔ Consumer<T> – Takes an input and returns nothing
+
+import java.util.function.Consumer;
+
+public class Main {
+    public static void main(String[] args) {
+        Consumer<String> printConsumer = msg -> System.out.println("Message: " + msg);
+        printConsumer.accept("Hello, Functional Interfaces!"); // Output: Message: Hello, Functional Interfaces!
+    }
+}
+
+✔ Supplier<T> – Takes nothing and returns a value
+import java.util.function.Supplier;
+
+public class Main {
+    public static void main(String[] args) {
+        Supplier<Double> randomSupplier = () -> Math.random();
+        System.out.println(randomSupplier.get()); // Output: Random number
+    }
+}
+
+Feature                          Functional Interface                                  Normal Interface
+Abstract Methods                   Exactly one                                          Can have multiple
+Default Methods                     Allowed                                             Allowed
+Static Methods                      Allowed                                             Allowed
+Lambda Expression Support           Yes                                                 No
+
+
+5️⃣ Summary
+
+✅ A functional interface has one abstract method and can have multiple default/static methods.
+✅ The @FunctionalInterface annotation ensures it remains a functional interface.
+✅ Lambda expressions work with functional interfaces to simplify code.
+✅ Java provides predefined functional interfaces like Predicate, Function, Consumer, and Supplier.
+
+
+
+
+
+
+
+The Optional class in Java (introduced in Java 8) is a container object that may or may not contain a non-null value.
+ It helps avoid NullPointerException by forcing developers to handle the absence of a value explicitly.
+
+ 1️⃣ Why Use Optional?
+
+ Before Java 8, developers relied on null checks to avoid NullPointerException:
+ public String getName(Person person) {
+     if (person != null) {
+         return person.getName();
+     } else {
+         return "Unknown";
+     }
+ }
+
+ 💡 Problem: If we forget the null check, calling person.getName() on null would cause a crash.
+
+ With Optional, we can make the absence of a value explicit:
+ public Optional<String> getName(Person person) {
+     return Optional.ofNullable(person.getName());
+ }
+
+ Now, the caller must handle the possibility of an empty value, reducing NullPointerException risk.
+
+ ⸻
+
+ 2️⃣ Creating an Optional Instance
+
+ There are three ways to create an Optional:
+
+ ✔ Optional.of(value) → Throws an exception if value is null
+ Optional<String> optional = Optional.of("Hello");
+ System.out.println(optional.get()); // Output: Hello
+ 🚨 Warning: If you pass null, it will throw NullPointerException:
+ Optional<String> optional = Optional.of(null); // ❌ Throws NullPointerException
+
+⸻
+
+✔ Optional.ofNullable(value) → Allows null values
+Optional<String> optional = Optional.ofNullable(null);
+System.out.println(optional.isPresent()); // Output: false
+
+✅ If the value is null, it returns an empty Optional.
+
+⸻
+
+✔ Optional.empty() → Represents an empty Optional
+Optional<String> optional = Optional.empty();
+System.out.println(optional.isPresent()); // Output: false
+
+
+⸻
+
+3️⃣ Checking If a Value is Present
+
+✔ isPresent() → Returns true if value exists
+Optional<String> optional = Optional.of("Java");
+System.out.println(optional.isPresent()); // Output: true
+
+✔ ifPresent(Consumer<T>) → Executes a function if a value is present
+Optional<String> optional = Optional.of("Java");
+
+optional.ifPresent(value -> System.out.println("Value: " + value));
+// Output: Value: Java
+
+💡 Benefit: No need for explicit null checks.
+
+⸻
+
+4️⃣ Retrieving Values from Optional
+
+✔ get() → Returns the value (⚠️ Unsafe, use with caution)
+
+Optional<String> optional = Optional.of("Java");
+System.out.println(optional.get()); // Output: Java
+
+🚨 ⚠️ If Optional is empty, calling get() throws NoSuchElementException.
+Optional<String> emptyOptional = Optional.empty();
+System.out.println(emptyOptional.get()); // ❌ Throws NoSuchElementException
+
+👉 Best Practice: Use orElse(), orElseGet(), or orElseThrow() instead.
+
+⸻
+
+✔ orElse(T other) → Returns a default value if empty
+Optional<String> optional = Optional.empty();
+String value = optional.orElse("Default Value");
+System.out.println(value); // Output: Default Value
+
+✔ orElseGet(Supplier<T>) → Uses a supplier for default value
+ Optional<String> optional = Optional.empty();
+ String value = optional.orElseGet(() -> "Generated Value");
+ System.out.println(value); // Output: Generated Value
+
+💡 Difference between orElse() and orElseGet()
+	•	orElse() always evaluates the default value.
+	•	orElseGet() only evaluates the default value when needed (better performance).
+
+⸻
+
+✔ orElseThrow(Supplier<Exception>) → Throws an exception if empty
+Optional<String> optional = Optional.empty();
+String value = optional.orElseThrow(() -> new RuntimeException("Value not found"));
+System.out.println(value); // ❌ Throws RuntimeException
+
+5️⃣ Transforming and Filtering Optional Values
+
+✔ map(Function<T, R>) → Transforms the value
+
+Optional<String> optional = Optional.of("java");
+
+Optional<String> upperCaseOptional = optional.map(String::toUpperCase);
+System.out.println(upperCaseOptional.get()); // Output: JAVA
+
+🚀 If the Optional is empty, map() returns an empty Optional.
+
+⸻
+
+✔ flatMap(Function<T, Optional<R>>) → Avoids nested Optional<Optional<T>>
+
+Optional<Optional<String>> nestedOptional = Optional.of(Optional.of("Java"));
+
+Optional<String> result = nestedOptional.flatMap(o -> o);
+System.out.println(result.get()); // Output: Java
+
+
+⸻
+
+✔ filter(Predicate<T>) → Returns the value if it matches a condition
+Optional<Integer> number = Optional.of(10);
+
+Optional<Integer> filteredNumber = number.filter(n -> n > 5);
+System.out.println(filteredNumber.isPresent()); // Output: true
+
+Optional<Integer> emptyResult = number.filter(n -> n > 20);
+System.out.println(emptyResult.isPresent()); // Output: false
+
+6️⃣ ifPresentOrElse() – Java 9+
+
+If the value is present, execute Consumer<T>. Otherwise, execute Runnable.
+Optional<String> optional = Optional.empty();
+
+optional.ifPresentOrElse(
+    value -> System.out.println("Value: " + value),
+    () -> System.out.println("No value found")
+);
+// Output: No value found
+
+7️⃣ stream() – Java 9+
+
+Converts an Optional into a Stream.
+Optional<String> optional = Optional.of("Java");
+optional.stream().forEach(System.out::println);
+// Output: Java
+
+🎯 Summary
+Method                                              Description
+of(T value)                                         Creates an Optional, throws NullPointerException if null.
+ofNullable(T value)                                 Creates an Optional, allows null.
+empty()                                             Returns an empty Optional.
+isPresent()                                         Checks if a value is present.
+ifPresent(Consumer<T> action)                       Executes an action if value is present.
+get()                                               Retrieves the value (throws exception if empty).
+orElse(T other)                                     Returns a default value if empty.
+orElseGet(Supplier<T>)                              Uses a supplier for the default value.
+orElseThrow(Supplier<Exception>)                    Throws an exception if empty.
+map(Function<T, R>)                                 Transforms the value if present.
+flatMap(Function<T, Optional<R>>)                   Avoids nested Optional<Optional<T>>.
+filter(Predicate<T>)                                Returns value if it matches a condition.
+ifPresentOrElse(Consumer<T>, Runnable)              Runs an action for both present and empty cases.
+stream()                                            converts Optional to a Stream (Java 9+).
+
+🎯 When to Use Optional?
+
+✅ Use Optional when:
+	•	You return a value that may be absent.
+	•	You want to avoid null checks.
+	•	You need to enforce proper handling of missing values.
+
+❌ Don’t use Optional:
+	•	As method parameters (Optional is meant for return values).
+	•	For fields in entities or DTOs (use null instead).
+
