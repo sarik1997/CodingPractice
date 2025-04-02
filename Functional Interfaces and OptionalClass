@@ -1,8 +1,10 @@
 Functional Interface in Java (Java 8+)
 
-A functional interface in Java is an interface that has exactly one abstract method. It can have multiple default or static methods but only one abstract method.
+A functional interface in Java is an interface that has exactly one abstract method.
+ It can have multiple default or static methods but only one abstract method.
 
-💡 Key Use: Functional interfaces are used in lambda expressions and method references to provide clean, concise, and readable code.
+💡 Key Use: Functional interfaces are used in lambda expressions and method references to provide clean,
+ concise, and readable code.
 
 ⸻
 

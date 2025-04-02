@@ -1,0 +1,262 @@
+What is ApplicationContext in Spring?
+
+ApplicationContext is the central interface in the Spring framework for managing the complete lifecycle of beans,
+dependency injection, and application configuration. It acts as the Spring IoC (Inversion of Control) container,
+responsible for creating and managing beans in a Spring application.
+
+⸻
+
+Key Responsibilities of ApplicationContext
+	1.	Bean Management → Instantiates, configures, and manages the lifecycle of beans.
+	2.	Dependency Injection → Injects dependencies into beans automatically.
+	3.	Event Handling → Supports event publishing and listening (ApplicationEvent).
+	4.	Internationalization → Supports message localization (MessageSource).
+	5.	Resource Management → Provides access to files and resources.
+	6.	AOP & Transaction Management → Manages aspect-oriented programming (AOP) and transactions.
+
+⸻
+
+Types of ApplicationContext in Spring
+
+Spring provides different implementations of ApplicationContext based on the application type:
+ApplicationContext Implementation                                       Description
+ClassPathXmlApplicationContext                      Loads bean definitions from an XML configuration file in the classpath.
+FileSystemXmlApplicationContext                     Loads bean definitions from an XML file located anywhere in the system.
+AnnotationConfigApplicationContext                  Loads beans from Java-based configuration using @Configuration and @ComponentScan.
+WebApplicationContext                               Special context for web applications (used in Spring MVC).
+
+How to Use ApplicationContext?
+
+1. Using AnnotationConfigApplicationContext (Java Config)
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class MainApp {
+    public static void main(String[] args) {
+        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        MyBean myBean = context.getBean(MyBean.class);
+        myBean.sayHello();
+    }
+}
+
+⸻
+
+2. Using ClassPathXmlApplicationContext (XML Config)
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public class MainApp {
+    public static void main(String[] args) {
+        ApplicationContext context = new ClassPathXmlApplicationContext("applicationContext.xml");
+        MyBean myBean = (MyBean) context.getBean("myBean");
+        myBean.sayHello();
+    }
+}
+3. Web Application Context in Spring Boot
+
+Spring Boot automatically initializes an ApplicationContext when the application starts.
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
+
+@SpringBootApplication
+public class SpringBootApp {
+    public static void main(String[] args) {
+        ApplicationContext context = SpringApplication.run(SpringBootApp.class, args);
+        MyBean myBean = context.getBean(MyBean.class);
+        myBean.sayHello();
+    }
+}
+Conclusion
+	•	ApplicationContext is the core container in Spring for managing beans, handling dependency injection, and event publishing.
+	•	Different types of ApplicationContext exist based on XML, Java-based, and Web-based configurations.
+	•	In Spring Boot, ApplicationContext is automatically initialized.
+	•	Compared to BeanFactory, ApplicationContext is more feature-rich and recommended for enterprise applications.
+
+
+In Spring, there are different types of beans based on their scope and lifecycle behavior. Here’s a breakdown:
+
+1. Based on Scope
+
+Scope defines how Spring manages bean instances.
+
+a) Singleton (Default)
+	•	Only one instance of the bean is created for the entire Spring container.
+	•	Shared across the application.
+	•	Used for stateless beans.
+@Component
+public class SingletonBean {
+    public SingletonBean() {
+        System.out.println("Singleton instance created");
+    }
+}
+
+✅ Use case: Service classes, DAO layers, configuration beans.
+
+⸻
+
+b) Prototype
+	•	A new instance is created each time the bean is requested.
+	•	Unlike singleton, it’s not managed after creation (no automatic destruction).
+@Component
+@Scope("prototype")
+public class PrototypeBean {
+    public PrototypeBean() {
+        System.out.println("Prototype instance created");
+    }
+}
+✅ Use case: Beans that hold user-specific data, or stateful beans.
+
+⸻
+
+c) Request (Web-Scoped)
+	•	A new bean instance is created for each HTTP request.
+	•	Used in Spring Web Applications.
+@Component
+@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
+public class RequestScopedBean {
+}
+✅ Use case: Storing request-specific data like session attributes.
+
+⸻
+
+d) Session (Web-Scoped)
+	•	A new bean is created per HTTP session.
+	•	Same bean instance is used throughout the session.
+@Component
+@Scope(value = WebApplicationContext.SCOPE_SESSION, proxyMode = ScopedProxyMode.TARGET_CLASS)
+public class SessionScopedBean {
+}
+✅ Use case: Storing user session data.
+
+⸻
+
+e) Application (Web-Scoped)
+	•	A single bean instance is shared across the entire application (like singleton).
+	•	Useful for storing application-wide settings.
+@Component
+@Scope(value = WebApplicationContext.SCOPE_APPLICATION)
+public class ApplicationScopedBean {
+}
+✅ Use case: Caching common data across requests.
+
+⸻
+
+2. Based on Bean Definition (Configuration & Creation)
+
+a) @Component, @Service, @Repository
+
+These are stereotype annotations used for automatic component scanning.
+	•	@Component: Generic component.
+	•	@Service: Specifically for business logic/service layer.
+	•	@Repository: Specifically for DAO (Data Access Layer), integrates with Spring Data.
+
+3. Based on Initialization & Lifecycle
+Factory Bean
+Custom bean creation :When factory methods are needed
+b) Factory Beans
+
+Spring allows you to create complex beans using a FactoryBean.
+@Component
+public class MyFactoryBean implements FactoryBean<MyBean> {
+    @Override
+    public MyBean getObject() throws Exception {
+        return new MyBean();
+    }
+
+    @Override
+    public Class<?> getObjectType() {
+        return MyBean.class;
+    }
+}
+
+Lazy Initialization (@Lazy)
+
+By default, singleton beans are created at startup. If you want them to be created only when needed, use @Lazy.
+@Component
+@Lazy
+public class LazyBean {
+    public LazyBean() {
+        System.out.println("Lazy Bean Initialized");
+    }
+}
+
+
+
+If you define a prototype-scoped bean inside a singleton-scoped bean in a Spring application,
+the singleton bean will receive only one instance of the prototype bean at the time of initialization.
+This means that even though the prototype bean is meant to create a new instance each time it is requested,
+ the singleton bean will hold onto the same instance throughout its lifecycle.
+
+Example:
+
+Singleton Bean Injecting a Prototype Bean
+
+@Component
+@Scope("singleton")
+public class SingletonBean {
+
+    private final PrototypeBean prototypeBean;
+
+    @Autowired
+    public SingletonBean(PrototypeBean prototypeBean) {
+        this.prototypeBean = prototypeBean;
+    }
+
+    public void showMessage() {
+        System.out.println("Prototype Bean: " + prototypeBean);
+    }
+}
+
+@Component
+@Scope("prototype")
+public class PrototypeBean {
+}
+
+Expected Behavior:
+	•	The SingletonBean is created once and will hold a single instance of PrototypeBean,
+	 even though PrototypeBean is marked as @Scope("prototype").
+	•	Any time showMessage() is called on SingletonBean, it will print the same instance of PrototypeBean.
+
+⸻
+
+How to Get a New Prototype Instance Each Time?
+
+If you want the SingletonBean to always receive a new instance of PrototypeBean when needed, use one of the following approaches:
+
+1. Using ObjectFactory
+@Component
+@Scope("singleton")
+public class SingletonBean {
+
+    private final ObjectFactory<PrototypeBean> prototypeBeanFactory;
+
+    @Autowired
+    public SingletonBean(ObjectFactory<PrototypeBean> prototypeBeanFactory) {
+        this.prototypeBeanFactory = prototypeBeanFactory;
+    }
+
+    public void showMessage() {
+        PrototypeBean prototypeBean = prototypeBeanFactory.getObject();
+        System.out.println("Prototype Bean: " + prototypeBean);
+    }
+}
+
+2. Using Provider (Preferred)
+@Component
+@Scope("singleton")
+public class SingletonBean {
+
+    private final Provider<PrototypeBean> prototypeBeanProvider;
+
+    @Autowired
+    public SingletonBean(Provider<PrototypeBean> prototypeBeanProvider) {
+        this.prototypeBeanProvider = prototypeBeanProvider;
+    }
+
+    public void showMessage() {
+        PrototypeBean prototypeBean = prototypeBeanProvider.get();
+        System.out.println("Prototype Bean: " + prototypeBean);
+    }
+}
+👉 This ensures that each time showMessage() is called, a new instance of PrototypeBean is created.

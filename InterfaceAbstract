@@ -96,7 +96,9 @@ When to Use What?
 
 
 
-In Java, a class (including an abstract class) cannot extend multiple classes due to the diamond problem and to maintain simplicity and clarity in the language’s design. However, you can achieve similar functionality using interfaces and composition. Let’s break this down:
+In Java, a class (including an abstract class) cannot extend multiple
+classes due to the diamond problem and to maintain simplicity and clarity in the language’s design.
+ However, you can achieve similar functionality using interfaces and composition. Let’s break this down:
 
 ⸻
 

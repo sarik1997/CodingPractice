@@ -1,0 +1,27 @@
+if a RuntimeException is thrown inside the run() method of a Runnable,
+ it will not affect the main thread, and execution will continue after calling t1.start().
+ The exception will be uncaught unless explicitly handled inside the run() method.
+
+Example:
+class MyRunnable implements Runnable {
+    @Override
+    public void run() {
+        System.out.println("Thread is running...");
+        throw new RuntimeException("Exception in thread");
+    }
+}
+
+public class RunnableExceptionTest {
+    public static void main(String[] args) {
+        Thread t1 = new Thread(new MyRunnable());
+        t1.start();
+
+        System.out.println("Main thread continues...");
+    }
+}
+output:
+Main thread continues...
+Thread is running...
+Exception in thread "Thread-0" java.lang.RuntimeException: Exception in thread
+    at MyRunnable.run(RunnableExceptionTest.java:5)
+    at java.base/java.lang.Thread.run(Thread.java:833)
