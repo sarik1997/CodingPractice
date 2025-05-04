@@ -6,6 +6,10 @@ public class GroupByAgeExample {
     public static Map<Integer, List<Employee>> groupByAge(List<Employee> employees) {
 //        return employees.stream()
 //                .collect(Collectors.groupingBy(Employee::getAge));
+//Count of employees group by dept
+//        Map<String, Long> departmentCount = employees.stream()
+//                .collect(Collectors.groupingBy(Employee::getDepartment, Collectors.counting()));
+
         Map<Integer, List<Employee>> grouped = new HashMap<>();
 
         for (Employee employee : employees) {

@@ -17,7 +17,7 @@ For Spring Boot 3+, use:
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-web</artifactId>
-</dependency>
+</dependency>o9
 
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -77,7 +77,7 @@ public class SecurityConfig {
 	•	Restricts /admin/** to ADMIN and /user/** to USER roles.
 
 
- Using JWT for Authentication (Stateless)
+ Using JWT for Authentication (Stateless) : we can use it for both authentication and authorization.
 
 For token-based authentication, use JWT (JSON Web Token).
 

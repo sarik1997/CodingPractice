@@ -1,0 +1,270 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/**Feature                  Comparable                                             Comparator
+ Package                    java.lang                                               java.util
+ Method                     compareTo(Object o)                                     compare(Object o1, Object o2)
+ Sort Logic Location        In the class itself                                     Separate from the class
+ Use Case                   Default sorting of objects                              Multiple custom sorting strategies
+ Modifies Original Class?   Yes                                                     No
+ Allows Multiple Orders?    No (only one order)                                     Yes (as many as needed)
+*/
+
+
+/**✅ Comparable Example
+    You implement this when you want your object to have natural ordering (like alphabetically, numerically, etc.).
+    🎯 Example: Sort Employees by salary
+ */
+
+class Employee implements Comparable<Employee> {
+    String name;
+    int salary;
+
+    public Employee(String name, int salary) {
+        this.name = name;
+        this.salary = salary;
+    }
+
+    // Natural order: by salary (ascending) ..it can be sorted by name also but one at a time
+    @Override
+    public int compareTo(Employee other) {
+        return Integer.compare(this.salary, other.salary);
+    }
+
+    @Override
+    public String toString() {
+        return name + ": " + salary;
+    }
+}
+
+public class ComparableExample {
+    public static void main(String[] args) {
+        List<Employee> employees = List.of(
+            new Employee("Alice", 50000),
+            new Employee("Bob", 30000),
+            new Employee("Charlie", 70000)
+        );
+
+        List<Employee> sorted = new ArrayList<>(employees);
+        Collections.sort(sorted);  // Uses compareTo()
+        sorted.forEach(System.out::println);
+    }
+}
+
+⸻
+
+✅ Comparator Example
+
+Use Comparator when:
+	•	You can’t modify the class, or
+	•	You need multiple sorting criteria.
+
+🎯 Example: Sort Employees by name
+class Employee {
+    String name;
+    int salary;
+
+    public Employee(String name, int salary) {
+        this.name = name;
+        this.salary = salary;
+    }
+
+    @Override
+    public String toString() {
+        return name + ": " + salary;
+    }
+}
+
+public class ComparatorExample {
+    public static void main(String[] args) {
+        List<Employee> employees = List.of(
+            new Employee("Alice", 50000),
+            new Employee("Bob", 30000),
+            new Employee("Charlie", 70000)
+        );
+
+        // Sort by name using Comparator
+        List<Employee> sortedByName = new ArrayList<>(employees);
+        sortedByName.sort(Comparator.comparing(emp -> emp.name));
+
+        sortedByName.forEach(System.out::println);
+    }
+}
+
+
+Comparator<Employee> byName = Comparator.comparing(Employee::getName);
+internally
+Comparator<Employee> byName = new Comparator<Employee>() {
+    @Override
+    public int compare(Employee o1, Employee o2) {
+        return o1.getName().compareTo(o2.getName());
+    }
+};
+
+⸻
+
+✅ Full Example: Sort Employees by Salary (Default), then by Name (Custom)
+import java.util.*;
+
+class Employee implements Comparable<Employee> {
+    String name;
+    int salary;
+
+    public Employee(String name, int salary) {
+        this.name = name;
+        this.salary = salary;
+    }
+
+    // Natural ordering by salary (ascending)
+    @Override
+    public int compareTo(Employee other) {
+        return Integer.compare(this.salary, other.salary);
+    }
+
+    @Override
+    public String toString() {
+        return name + ": ₹" + salary;
+    }
+}
+
+public class EmployeeSortingExample {
+    public static void main(String[] args) {
+        List<Employee> employees = new ArrayList<>(List.of(
+            new Employee("Alice", 50000),
+            new Employee("Charlie", 70000),
+            new Employee("Bob", 50000),
+            new Employee("David", 30000)
+        ));
+
+        System.out.println("🔹 Sorted by Salary (default - Comparable):");
+        Collections.sort(employees); // uses compareTo
+        employees.forEach(System.out::println);
+
+        System.out.println("\n🔸 Sorted by Name (custom - Comparator):");
+        employees.sort(Comparator.comparing(emp -> emp.name)); // uses Comparator
+        employees.forEach(System.out::println);
+    }
+}
+🧾 Output
+🔹 Sorted by Salary (default - Comparable):
+David: ₹30000
+Alice: ₹50000
+Bob: ₹50000
+Charlie: ₹70000
+
+🔸 Sorted by Name (custom - Comparator):
+Alice: ₹50000
+Bob: ₹50000
+Charlie: ₹70000
+David: ₹30000
+
+If you want multi-level sorting, like salary ASC, then name ASC, use:
+employees.sort(
+    Comparator.comparingInt((Employee e) -> e.salary)
+              .thenComparing(e -> e.name)
+);
+
+
+Other Examples of Comparator
+✅ Step 1: Define the Employee class
+class Employee {
+    int id;
+    String name;
+    int salary;
+
+    public Employee(int id, String name, int salary) {
+        this.id = id;
+        this.name = name;
+        this.salary = salary;
+    }
+
+    @Override
+    public String toString() {
+        return "ID: " + id + ", Name: " + name + ", Salary: ₹" + salary;
+    }
+}
+✅ Step 2: Create Comparators for Sorting
+
+class EmployeeComparators {
+    public static Comparator<Employee> byId() {
+        return Comparator.comparingInt(emp -> emp.id);
+    }
+
+    public static Comparator<Employee> byName() {
+        return Comparator.comparing(emp -> emp.name);
+    }
+
+    public static Comparator<Employee> bySalary() {
+        return Comparator.comparingInt(emp -> emp.salary);
+    }
+}
+✅ Step 3: Use It in Your Main Class
+public class EmployeeSortDemo {
+    public static void main(String[] args) {
+        List<Employee> employees = new ArrayList<>(List.of(
+            new Employee(3, "Alice", 50000),
+            new Employee(1, "Charlie", 70000),
+            new Employee(4, "Bob", 50000),
+            new Employee(2, "David", 30000)
+        ));
+
+        System.out.println("🔹 Sort by ID:");
+        employees.sort(EmployeeComparators.byId());
+        employees.forEach(System.out::println);
+
+        System.out.println("\n🔸 Sort by Name:");
+        employees.sort(EmployeeComparators.byName());
+        employees.forEach(System.out::println);
+
+        System.out.println("\n💰 Sort by Salary:");
+        employees.sort(EmployeeComparators.bySalary());
+        employees.forEach(System.out::println);
+    }
+}
+🧾 Output
+🔹 Sort by ID:
+ID: 1, Name: Charlie, Salary: ₹70000
+ID: 2, Name: David, Salary: ₹30000
+ID: 3, Name: Alice, Salary: ₹50000
+ID: 4, Name: Bob, Salary: ₹50000
+
+🔸 Sort by Name:
+ID: 3, Name: Alice, Salary: ₹50000
+ID: 4, Name: Bob, Salary: ₹50000
+ID: 1, Name: Charlie, Salary: ₹70000
+ID: 2, Name: David, Salary: ₹30000
+
+💰 Sort by Salary:
+ID: 2, Name: David, Salary: ₹30000
+ID: 3, Name: Alice, Salary: ₹50000
+ID: 4, Name: Bob, Salary: ₹50000
+ID: 1, Name: Charlie, Salary: ₹70000
+
+You can do multi-level sorting, e.g. sort by salary, then by name:
+employees.sort(
+    EmployeeComparators.bySalary().thenComparing(EmployeeComparators.byName())
+);
+
+For Descending order
+COMPARABLE
+// Descending order by salary
+    @Override
+    public int compareTo(Employee other) {
+        return Integer.compare(other.salary, this.salary); // Descending
+    }
+
+COMPARATOR
+class EmployeeComparators {
+    public static Comparator<Employee> byIdDesc() {
+        return Comparator.comparingInt(emp -> emp.id).reversed();
+    }
+
+    public static Comparator<Employee> byNameDesc() {
+        return Comparator.comparing(Employee::getName).reversed();
+    }
+
+    public static Comparator<Employee> bySalaryDesc() {
+        return Comparator.comparingInt(Employee::getSalary).reversed();
+    }
+}

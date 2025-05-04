@@ -1,0 +1,208 @@
+Thread :- A thread is the smallest unit of execution in a process. A process can have multiple threads running concurrently.
+
+Main Thread:- When a program starts, one thread is automatically created — the main thread.
+
+Creating Threads :-
+There are different ways to create threads depending on the language. In Java, for instance:
+	•	By extending the Thread class.
+	•	By implementing the Runnable interface.
+	•	Using thread pools (ExecutorService).
+☕ Java Multithreading Examples
+
+✅ Example 1: Extending Thread class
+class MyThread extends Thread {
+    public void run() {
+        System.out.println("Thread running: " + Thread.currentThread().getName());
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        MyThread t1 = new MyThread();
+        t1.start();  // start() calls run() internally on a new thread
+        System.out.println("Main thread: " + Thread.currentThread().getName());
+    }
+}
+✅ Example 2: Implementing Runnable interface
+class MyRunnable implements Runnable {
+    public void run() {
+        System.out.println("Running in: " + Thread.currentThread().getName());
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Thread t1 = new Thread(new MyRunnable());
+        t1.start();
+        System.out.println("Main thread: " + Thread.currentThread().getName());
+    }
+}
+✅ Example 3: Using ExecutorService (Thread Pool)
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class Main {
+    public static void main(String[] args) {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        Runnable task = () -> System.out.println("Running in thread: " + Thread.currentThread().getName());
+
+        executor.submit(task);
+        executor.submit(task);
+
+        executor.shutdown(); // Don't forget to shut it down!
+    }
+}
+
+🔸 With join() — Main thread waits
+class MyRunnable implements Runnable {
+    @Override
+    public void run() {
+        System.out.println("Thread is running...");
+        try {
+            Thread.sleep(100); // Simulate some work
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Thread is done.");
+    }
+}
+
+public class JoinExample {
+    public static void main(String[] args) {
+        Thread t1 = new Thread(new MyRunnable());
+        t1.start();
+
+        try {
+            t1.join(); // Main thread waits for t1 to finish
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Main thread continues...");
+    }
+}
+🔹 Output (deterministic):
+Thread is running...
+Thread is done.
+Main thread continues...
+🧠 Explanation: join() blocks the main thread until t1 finishes.
+t1.join() → Now the main thread pauses and waits for t1 to finish.
+
+Description
+Concurrency             Multiple tasks make progress, possibly overlapping in time.
+Parallelism             Tasks run at the same time, often on multiple CPU cores.
+Synchronization         Ensuring only one thread accesses critical code/data at a time.
+Race Condition          Bug where threads access shared data in an unsafe way.
+Deadlock                Two or more threads are blocked forever, each waiting for the other.
+Thread-safe             Code that functions correctly when multiple threads access it concurrently.
+
+if a RuntimeException is thrown inside the run() method of a Runnable,
+ it will not affect the main thread, and execution will continue after calling t1.start().
+ The exception will be uncaught unless explicitly handled inside the run() method.
+
+Example:
+class MyRunnable implements Runnable {
+    @Override
+    public void run() {
+        System.out.println("Thread is running...");
+        throw new RuntimeException("Exception in thread");
+    }
+}
+
+public class RunnableExceptionTest {
+    public static void main(String[] args) {
+        Thread t1 = new Thread(new MyRunnable());
+        t1.start();
+
+        System.out.println("Main thread continues...");
+    }
+}
+output:
+Main thread continues...
+Thread is running...
+Exception in thread "Thread-0" java.lang.RuntimeException: Exception in thread
+    at MyRunnable.run(RunnableExceptionTest.java:5)
+    at java.base/java.lang.Thread.run(Thread.java:833)
+
+
+    import java.util.concurrent.*;
+    import java.util.*;
+
+    public class Concurrent2DSum {
+        public static void main(String[] args) throws InterruptedException, ExecutionException {
+            int[][] matrix = {
+                {1, 2, 3},
+                {4, 5, 6},
+                {7, 8, 9}
+            };
+
+            ExecutorService executor = Executors.newFixedThreadPool(matrix.length);
+            List<Future<Integer>> futures = new ArrayList<>();
+
+            // Submit one task per row
+            for (int[] row : matrix) {
+                Callable<Integer> task = () -> {
+                    int sum = 0;
+                    for (int num : row) {
+                        sum += num;
+                    }
+                    return sum;
+                };
+                futures.add(executor.submit(task));
+            }
+
+            // Get the results
+            int rowNum = 0;
+            for (Future<Integer> future : futures) {
+                System.out.println("Row " + rowNum++ + " sum: " + future.get());
+            }
+
+            executor.shutdown();
+        }
+    }
+
+    Virtual threads are a lightweight concurrency feature introduced in Java 21 (finalized as stable)
+    as part of Project Loom. They enable you to write high-throughput, scalable concurrent applications
+    with a thread-per-task model—without the performance and resource costs of traditional platform (OS) threads.
+
+    ⸻
+
+    🧵 What Are Virtual Threads?
+    	•	Virtual threads are user-mode threads managed by the Java Virtual Machine (JVM), not the OS.
+    	•	They are scheduled by the JVM on a small pool of underlying carrier (platform) threads.
+    	•	Each virtual thread can be blocked or suspended without blocking an actual OS thread.
+
+    ⸻
+
+    🆚 Virtual Threads vs Platform Threads
+    Feature             Virtual Thread                      Platform (OS) Thread
+    Managed by          JVM                                 Operating System
+    Blocking operations Cheap                               Expensive (blocks OS threads)
+    Resource cost       Very low (thousands possible)       High (hundreds typical)
+    Use case            Massive concurrency (e.g. I/O)      CPU-intensive tasks
+
+✅ Benefits
+	•	Simpler concurrency model (thread-per-request).
+	•	Scalable like asynchronous code, without callbacks or reactive complexity.
+	•	Works with existing java.util.concurrent APIs and frameworks.
+
+⸻
+
+🚀 How to Use Virtual Threads (Java 21+)
+
+Create a Virtual Thread:
+Thread.startVirtualThread(() -> {
+    System.out.println("Running in a virtual thread: " + Thread.currentThread());
+});
+
+With ExecutorService:
+ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+
+executor.submit(() -> {
+    // Lightweight blocking task
+    Thread.sleep(1000);
+    return "Done";
+});
+
+executor.shutdown();

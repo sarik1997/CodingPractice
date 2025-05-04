@@ -1,0 +1,42 @@
+Distributed locking is a technique used in distributed systems to ensure that only one process (or thread) can access a shared resource at a time, across multiple nodes or services. It is crucial when coordinating access to resources like databases, files, or caches to prevent race conditions and maintain data consistency.
+
+🔐 Why Use Distributed Locking?
+
+In a multi-instance or microservices environment, traditional in-memory locks (like Java synchronized or ReentrantLock) won’t work across different nodes. Distributed locking ensures mutual exclusion across a cluster.
+
+⸻
+
+🔧 Common Distributed Lock Implementations
+
+1. Using Redis (RedLock Algorithm)
+	•	Tools: Redisson, lettuce
+	•	Pros: Fast, easy to integrate
+	•	Example (Redisson in Java):
+	RLock lock = redissonClient.getLock("my-lock");
+    try {
+        if (lock.tryLock(10, 60, TimeUnit.SECONDS)) {
+            // Critical section
+        }
+    } finally {
+        lock.unlock();
+    }
+
+    2. Using Zookeeper
+    	•	Tools: Apache Curator
+    	•	Zookeeper uses ephemeral znodes to implement locks.
+    	•	Very consistent and reliable.
+    	•	Example (Curator):
+    	InterProcessMutex lock = new InterProcessMutex(client, "/mylock");
+        if (lock.acquire(10, TimeUnit.SECONDS)) {
+            try {
+                // Critical section
+            } finally {
+                lock.release();
+            }
+        }
+
+        3. Using Databases (e.g., MySQL, PostgreSQL, Oracle)
+        	•	Use SELECT ... FOR UPDATE, or application-level lock tables
+        	•	Slower and less scalable, but acceptable for simple needs
+        	•	Example:
+        	SELECT * FROM locks WHERE name = 'my_lock' FOR UPDATE;

@@ -1,0 +1,32 @@
+🧠 Basic Difference
+Feature                     Checked Exception                               Unchecked Exception
+Inherits from               Exception (but NOT RuntimeException)            RuntimeException or its subclasses
+Compile-time checking?      Yes must be handled or declared                 No  compiler doesn't force you
+Use for                     External conditions (file I/O, DB issues, etc.) Programming errors (null pointers, bad logic)
+Must handle?                Yes (try-catch or throws)                       Optional
+
+✅ Checked Exception Example
+import java.io.*;
+
+public class CheckedExample {
+    public static void main(String[] args) {
+        try {
+            FileReader file = new FileReader("test.txt");
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found!");
+        }
+    }
+}
+
+🔸 FileNotFoundException is a checked exception.
+You must handle it — otherwise the compiler will throw an error.
+
+✅ Unchecked Exception Example
+public class UncheckedExample {
+    public static void main(String[] args) {
+        int[] arr = new int[3];
+        System.out.println(arr[5]); // ❌ ArrayIndexOutOfBoundsException
+    }
+}
+🔹 ArrayIndexOutOfBoundsException is an unchecked exception.
+It compiles fine, but crashes at runtime if the issue occurs.

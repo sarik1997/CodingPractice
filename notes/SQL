@@ -1,0 +1,66 @@
+To update
+
+To set a column’s value as 'Not Available' when it is NULL, you can use SQL queries with either:
+	•	UPDATE statements to permanently change the data in the table
+	•	SELECT statements with conditional expressions like COALESCE() or CASE to show default values without changing the data
+
+⸻
+
+🔧 1. UPDATE Query – Permanently replace NULL with 'Not Available'
+UPDATE your_table
+SET column_name = 'Not Available'
+WHERE column_name IS NULL;
+
+👀 2. SELECT Query – Show 'Not Available' for NULL values (without changing the table)
+
+Option A: Using COALESCE()
+SELECT COALESCE(column_name, 'Not Available') AS column_name FROM your_table;
+SELECT id, name, COALESCE(email, 'Not Available') AS email FROM customers;
+
+Option B: Using CASE
+SELECT
+  CASE
+    WHEN column_name IS NULL THEN 'Not Available'
+    ELSE column_name
+  END AS column_name
+FROM your_table;
+
+
+In SQL (across major databases like MySQL, PostgreSQL, Oracle, SQL Server),
+indexes are special data structures that improve the speed of data retrieval operations.
+ There are several types of indexes, each suited to different use cases.
+
+⸻
+
+🔍 Types of Indexing in SQL
+
+1. Single-column Index
+	•	Created on a single column.
+	•	Improves search and filter performance on that column.
+	CREATE INDEX idx_name ON employees(last_name);
+
+2. Composite (Multi-column) Index
+	•	Indexes multiple columns together.
+	•	Only efficient when queries filter using the left-most columns.
+	CREATE INDEX idx_emp_dept ON employees(department_id, last_name);
+
+3. Unique Index
+	•	Ensures all values in the indexed column(s) are unique.
+	•	Automatically created for primary keys and unique constraints.
+	CREATE UNIQUE INDEX idx_email_unique ON users(email);
+
+4. Full-text Index
+	•	Used for text searching (e.g., searching for words or phrases).
+	•	Supported in MySQL (FULLTEXT), PostgreSQL (via tsvector), etc.
+	-- MySQL
+    CREATE FULLTEXT INDEX idx_desc_fulltext ON articles(description);
+
+ 5. Spatial Index
+ 	•	Used for indexing geographic data (GIS types).
+ 	•	Available in databases like MySQL, PostgreSQL (PostGIS), Oracle Spatial.
+ 	-- MySQL (on geometry column)
+    CREATE SPATIAL INDEX idx_location ON maps(location);
+    ETC....
+
+
+
