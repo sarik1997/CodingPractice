@@ -1,0 +1,205 @@
+
+⸻
+
+1. Design a URL Shortener (like bit.ly)
+
+Requirements:
+	•	Shorten a long URL
+	•	Retrieve the original URL
+	•	Handle high read/write traffic
+
+	                      +---------------------------+
+                          |      Load Balancer        |
+                          +-----------+---------------+
+                                      |
+                           +----------v-----------+
+                           |   API Gateway /      |
+                           |   Spring Boot App    |
+                           +----------+-----------+
+                                      |
+           +--------------------------+--------------------------+
+           |                          |                          |
+    +------v-------+          +-------v------+          +--------v-------+
+    | Shorten API  |          | Redirect API |          |  Admin API     |
+    +------+-------+          +------+-------+          +--------+-------+
+           |                         |                           |
+           |                         |                           |
+    +------v-------+          +------v-------+          +--------v--------+
+    |   URL Service|          |  URL Service |          | AnalyticsService|
+    +------+-------+          +------+-------+          +--------+--------+
+           |                         |                           |
+    +------v-------------------------v---------------------------v------+
+    |                          Redis Cache                            |
+    +------^--------------------------^---------------------------^-----+
+           |                          |                           |
+    +------v-----------+     +--------v----------+      +---------v--------+
+    |   Relational DB  |     |     Kafka (opt)   |      | Analytics Storage|
+    | (MySQL/Postgres) |     +-------------------+      |  (e.g., BigQuery)|
+    +------------------+                                 +------------------+
+
+    Here’s a Java + Spring Boot implementation of the core functionality for a URL Shortener system.
+    This includes:
+    	•	REST Controller (ShortenerController)
+    	•	Service (UrlShortenerService)
+    	•	Repository (UrlMappingRepository)
+    	•	Entity (UrlMapping)
+    	•	Base62 encoding
+    	•	MySQL persistence
+    src/
+    └── main/
+        └── java/
+            └── com.example.shortener/
+                ├── controller/
+                │   └── ShortenerController.java
+                ├── entity/
+                │   └── UrlMapping.java
+                ├── repository/
+                │   └── UrlMappingRepository.java
+                └── service/
+                    └── UrlShortenerService.java
+
+📌 1. Entity: UrlMapping.java
+   @Entity
+   @Getter @Setter
+   @NoArgsConstructor
+   @AllArgsConstructor
+   @Builder
+   public class UrlMapping {
+
+       @Id
+       @GeneratedValue(strategy = GenerationType.IDENTITY)
+       private Long id;
+
+       @Column(unique = true)
+       private String shortCode;
+
+       @Column(columnDefinition = "TEXT", nullable = false)
+       private String longUrl;
+   }
+
+📌 2. Repository: UrlMappingRepository.java
+
+
+   public interface UrlMappingRepository extends JpaRepository<UrlMapping, Long> {
+       Optional<UrlMapping> findByShortCode(String shortCode);
+   }
+
+📌 3. Service: UrlShortenerService.java
+@Service
+public class UrlShortenerService {
+
+    private static final String BASE62 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    @Autowired
+    private UrlMappingRepository repository;
+
+    public String shortenUrl(String longUrl) {
+        // Save without shortCode first to get the ID
+        UrlMapping mapping = UrlMapping.builder()
+                .longUrl(longUrl)
+                .build();
+        mapping = repository.save(mapping);
+
+        String shortCode = encodeBase62(mapping.getId());
+        mapping.setShortCode(shortCode);
+        repository.save(mapping);
+
+        return shortCode;
+    }
+
+    public String getOriginalUrl(String shortCode) {
+        return repository.findByShortCode(shortCode)
+                .map(UrlMapping::getLongUrl)
+                .orElse(null);
+    }
+
+    private String encodeBase62(long id) {
+        StringBuilder sb = new StringBuilder();
+        while (id > 0) {
+            sb.append(BASE62.charAt((int)(id % 62)));
+            id /= 62;
+        }
+        return sb.reverse().toString();
+    }
+}
+
+⸻
+
+📌 4. Controller: ShortenerController.java
+package com.example.shortener.controller;
+
+import com.example.shortener.service.UrlShortenerService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
+
+import java.net.URI;
+
+@RestController
+@RequestMapping("/")
+public class ShortenerController {
+
+    @Autowired
+    private UrlShortenerService service;
+
+    @PostMapping("/shorten")
+    public ResponseEntity<String> shorten(@RequestBody String longUrl) {
+        String code = service.shortenUrl(longUrl);
+        return ResponseEntity.ok("https://sho.rt/" + code);
+    }
+
+    @GetMapping("/{code}")
+    public RedirectView redirect(@PathVariable String code) {
+        String longUrl = service.getOriginalUrl(code);
+        if (longUrl != null) {
+            return new RedirectView(longUrl);
+        } else {
+            RedirectView view = new RedirectView();
+            view.setUrl("/404"); // or custom error page
+            return view;
+        }
+    }
+}
+
+
+Request/Response
+POST /shorten
+Body: "https://www.example.com/articles/how-to-code"
+Backend returns:
+https://sho.rt/abc123
+
+Now, the user or someone else clicks:
+https://sho.rt/abc123
+
+This hits your Spring Boot backend at:
+GET /abc123
+
+⸻
+
+🔁 Step 3: Controller Redirects to Original URL
+
+Your controller method does this:
+@GetMapping("/{code}")
+public RedirectView redirect(@PathVariable String code) {
+    String longUrl = service.getOriginalUrl(code);
+    if (longUrl != null) {
+        return new RedirectView(longUrl); // HTTP 302 to long URL
+    } else {
+        return new RedirectView("/404");
+    }
+}
+Summary:
+	•	API Design:
+	•	POST /shorten → Accepts a long URL, returns a short URL
+	•	GET /{shortCode} → Redirects to original URL
+	•	Tech Stack (Java):
+	•	Spring Boot for REST APIs
+	•	Redis or in-memory cache for quick lookup
+	•	MySQL/PostgreSQL for persistent storage
+	•	Key Design Decisions:
+	•	Use Base62 encoding of auto-incremented IDs
+	•	Store {shortCode, longURL} mapping
+	•	Cache popular short URLs
+	•	Use Bloom Filters to check non-existent keys quickly
+

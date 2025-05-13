@@ -1,0 +1,63 @@
+🧭 Key Differences: HashMap vs TreeMap
+Feature                             HashMap                                         TreeMap
+Ordering                            ❌ No ordering (random or hash-based)           ✅ Keys sorted in natural or custom order
+Implementation                      Uses a hash table                               Uses a Red-Black tree (balanced BST)
+Performance (get/put)               O(1) average time                               O(log n) time
+Allows null key?                    ✅ Yes, one null key                            ❌ No null key
+Allows null values?                 ✅ Yes                                          ✅ Yes
+Thread safety                       ❌ Not thread-safe                              ❌ Not thread-safe
+Use case                            Fast lookups, unordered storage                 Sorted keys, range queries
+
+Map<String, Integer> hashMap = new HashMap<>();
+ hashMap.put("banana", 2);
+ hashMap.put("apple", 5);
+ hashMap.put("cherry", 3);
+ System.out.println(hashMap); // Order not guaranteed
+
+ Map<String, Integer> treeMap = new TreeMap<>();
+ treeMap.put("banana", 2);
+ treeMap.put("apple", 5);
+ treeMap.put("cherry", 3);
+ System.out.println(treeMap); // Output sorted by key
+
+ 🧠 When to Use What:
+ 	Use HashMap when:
+ 	•	You want fast access and don’t care about order.
+ 	•	You need to store a null key.
+ 	Use TreeMap when:
+ 	•	You need the keys to be sorted automatically.
+ 	•	You want to do range queries like subMap(), headMap(), tailMap().
+
+🧭 Key Differences: Synchronized HashMap vs ConcurrentHashMap
+
+Feature                                     Synchronized HashMap                                ConcurrentHashMap
+How it is created                   Collections.synchronizedMap(new HashMap<>())            new ConcurrentHashMap<>()
+Thread safety mechanism         Uses a single lock on the entire map (coarse-grained)       Uses fine-grained locks (segments or buckets)
+Performance                     Slower under high concurrency due to full locking           Much faster under concurrent access
+Null keys/values                ✅ Allows 1 null key and multiple null values               ❌ Does not allow null keys or null values
+Iteration safety                Must manually synchronize during iteration                  Iteration is weakly consistent (no ConcurrentModificationException)
+Read operations                 Blocked if a write is in progress                           Read operations never block (non-locking reads)
+Introduced in Java              Java 1.2 (via Collections framework)                        Java 1.5 (in java.util.concurrent)
+
+🔧 Code Comparison:
+
+🔹 Synchronized HashMap:
+Map<String, String> map = Collections.synchronizedMap(new HashMap<>());
+
+synchronized (map) {
+    for (String key : map.keySet()) {
+        System.out.println(key + ": " + map.get(key));
+    }
+}
+🔹 ConcurrentHashMap:
+Map<String, String> map = new ConcurrentHashMap<>();
+
+for (String key : map.keySet()) {
+    System.out.println(key + ": " + map.get(key)); // No explicit sync needed
+}
+🧠 When to Use:
+Scenario                                        Recommended Map
+Simple single-threaded code                     HashMap
+Low concurrency, legacy code                    SynchronizedMap
+High-performance, multi-threaded access         ✅ ConcurrentHashMap
+

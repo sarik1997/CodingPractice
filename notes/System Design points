@@ -40,3 +40,112 @@ In a multi-instance or microservices environment, traditional in-memory locks (l
         	•	Slower and less scalable, but acceptable for simple needs
         	•	Example:
         	SELECT * FROM locks WHERE name = 'my_lock' FOR UPDATE;
+
+
+
+
+2. Design an E-commerce System (like Amazon)
+
+Core Components:
+	•	User management
+	•	Product catalog
+	•	Shopping cart
+	•	Order management
+	•	Payment handling
+
+Answer:
+	•	Microservices approach using Spring Boot:
+	•	UserService, ProductService, CartService, OrderService, PaymentService
+	•	Use Kafka for event-driven architecture (e.g., after payment, trigger shipping)
+	•	Database:
+	•	PostgreSQL for structured data
+	•	Elasticsearch for product search
+	•	Redis for cart caching
+	•	Concurrency Handling:
+	•	Use optimistic locking (JPA @Version) for inventory updates
+	•	Use distributed locks (Redisson) to prevent over-ordering
+	•	Scalability:
+	•	Stateless services with Kubernetes
+	•	API Gateway + Service Registry (Spring Cloud Netflix stack)
+
+⸻
+
+3. Design a Rate Limiter
+
+Requirements:
+	•	Limit number of API requests per user per minute
+
+Answer:
+	•	Algorithms:
+	•	Token Bucket or Leaky Bucket
+	•	Use Redis with TTL:
+	•	Store {user_id}:{timestamp} keys
+	•	Use Redis atomic increment and expire
+	•	Java Stack:
+	•	Spring Boot interceptor or filter
+	•	RedisTemplate for accessing Redis
+	•	Use Bucket4j library for in-memory or distributed rate limiting
+
+⸻
+
+4. Design a Chat System (like WhatsApp or Slack)
+
+Requirements:
+	•	1:1 and group chats
+	•	Message history
+	•	Online status
+
+Answer:
+	•	Services:
+	•	ChatService, UserService, MessageService, NotificationService
+	•	Use WebSocket (Spring WebSocket) or STOMP over WebSocket for real-time communication
+	•	Use MongoDB for storing messages (due to its document-based nature)
+	•	Kafka for async delivery and notifications
+	•	Redis pub/sub for online status tracking
+
+⸻
+
+5. Design a Logging System
+
+Requirements:
+	•	Collect logs from various applications
+	•	Search logs by time, service, severity
+
+Answer:
+	•	Log ingestion:
+	•	Services log to Kafka topics
+	•	Consumers write to Elasticsearch
+	•	Frontend to query logs (Kibana or custom Spring Boot API)
+	•	Storage: Elasticsearch for fast indexing
+	•	Use Fluentd or Logstash as collectors
+
+⸻
+
+6. Design a File Storage System (like Google Drive)
+
+Requirements:
+	•	Upload, download, share files
+	•	Folder hierarchy
+	•	Versioning
+
+Answer:
+	•	Use Spring Boot for APIs
+	•	Files stored in AWS S3 or on a blob store
+	•	Metadata (ownership, versions, path) stored in PostgreSQL
+	•	Share via pre-signed URLs
+	•	Use @PreAuthorize and @PostAuthorize (Spring Security) for access control
+	•	Versioning via a separate table or S3 versioning
+
+⸻
+
+7. Design a Notification System (Email/SMS/Push)
+
+Answer:
+	•	Components:
+	•	NotificationService
+	•	TemplatesService
+	•	QueueProcessor
+	•	Use Spring Boot with RabbitMQ/Kafka
+	•	Async delivery using background workers
+	•	Fallback mechanism (e.g., retry with exponential backoff)
+	•	Store preferences per user (email/sms/push) in DB

@@ -206,3 +206,111 @@ executor.submit(() -> {
 });
 
 executor.shutdown();
+
+✅ What is a Future in Java?
+
+A Future represents the result of an asynchronous computation. It’s like a placeholder for a value that will be available later, after a background task finishes.
+
+📦 Key methods of Future:
+	•	get(): Waits (blocks) until the result is ready, then returns it.
+	•	isDone(): Returns true if the task is finished.
+	•	cancel(boolean mayInterruptIfRunning): Tries to stop the task.
+
+⸻
+
+✅ Example:
+ExecutorService executor = Executors.newSingleThreadExecutor();
+
+Future<Integer> future = executor.submit(() -> {
+    Thread.sleep(1000);
+    return 42;
+});
+
+System.out.println("Waiting...");
+int result = future.get(); // blocks until result is ready
+System.out.println("Result: " + result);
+
+executor.shutdown();
+
+Feature                                          Runnable                                                    Callable<V>
+Returns a value                                  ❌ No                                                       ✅ Yes (V is the return type)
+Throws checked exceptions                        ❌ No (must handle inside)                                  ✅ Yes (can throw checked exceptions)
+Submit with                                      ExecutorService.submit(Runnable)                            ExecutorService.submit(Callable)
+Result with                                      N/A                                                         Future<V>
+
+
+⸻
+
+🔧 Example:
+
+Runnable (no result):
+Runnable task = () -> System.out.println("No return");
+executor.submit(task);
+
+Callable (returns value):
+Callable<Integer> task = () -> 5 + 5;
+Future<Integer> result = executor.submit(task);
+🧠 When to use what?
+	•	Use Runnable when you just want to run something in parallel without needing a result.
+	•	Use Callable when you need to get a result or handle exceptions properly.
+
+
+
+✅ Use ExecutorService with Callable
+ 	•	Submit 5 tasks (each for one file).
+ 	•	Use Future to collect results.
+ 	•	Wait for all to complete.
+ 	•	Merge the output.
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.*;
+
+public class FileProcessor {
+    public static void main(String[] args) throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool(5); // 5 threads
+
+        // File paths to process
+        List<String> filePaths = List.of("file1.txt", "file2.txt", "file3.txt", "file4.txt", "file5.txt");
+
+        // Submit tasks
+        List<Future<List<String>>> futures = new ArrayList<>();
+        for (String path : filePaths) {
+            futures.add(executor.submit(() -> processFile(path)));
+        }
+
+        // Collect and merge results
+        List<String> mergedResults = new ArrayList<>();
+        for (Future<List<String>> future : futures) {
+            mergedResults.addAll(future.get()); // get() blocks until task finishes
+        }
+
+        // Optionally write to consolidated file
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("output.txt"))) {
+            for (String line : mergedResults) {
+                writer.write(line);
+                writer.newLine();
+            }
+        }
+
+        executor.shutdown();
+        System.out.println("All files processed and consolidated.");
+    }
+
+    // Dummy file processor that reads lines into a list
+    public static List<String> processFile(String filePath) throws IOException {
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line); // or transform/process as needed
+            }
+        }
+        return lines;
+    }
+}
+
+🚀 Key Concepts:
+	•	ExecutorService: manages threads.
+	•	Callable + Future: handles return values.
+	•	future.get(): blocks until task is done.
+	•	shutdown(): gracefully closes thread pool.
