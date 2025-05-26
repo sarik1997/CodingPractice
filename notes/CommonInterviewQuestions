@@ -1,0 +1,234 @@
+✅ Java Features
+
+🔹 Java 8 (LTS - 2014)
+	•	Lambda Expressions: () -> {} — functional programming.
+	•	Streams API: Process collections using functional style.
+	•	Functional Interfaces: Predicate, Function, etc.
+	•	Default & Static methods in interfaces
+	•	Optional: Avoid null checks.
+	•	Method References: ClassName::methodName
+	•	New Date & Time API: java.time.*
+
+🔹 Java 11 (LTS - 2018)
+	•	var for local variables (already in Java 10)
+	•	String API improvements: isBlank(), lines(), strip()
+	•	Files API: readString(), writeString()
+	•	HTTP Client API: HttpClient, HttpRequest, etc.
+	•	Removed Java EE modules: like JAXB, activation, etc.
+
+🔹 Java 17 (LTS - 2021)
+	•	Sealed Classes: Restrict which classes can extend a class.
+	•	Pattern Matching for instanceof: if (obj instanceof String s)
+	•	Records: Compact, immutable data carriers.
+	•	Switch Enhancements: More expressive switch
+	•	Text Blocks: """ multiline strings """
+
+⸻
+
+🌱 What is Spring?
+
+Spring is a lightweight, open-source Java framework for building enterprise-level applications.
+Core feature: Dependency Injection (IoC container)
+
+⸻
+
+🤔 Why do we use Spring?
+	•	Reduces boilerplate code
+	•	Manages dependencies
+	•	Integrates easily with databases, REST APIs, security, etc.
+	•	Enables modular, testable code
+
+⸻
+
+🆚 Spring vs Spring Boot
+Feature                 Spring Framework                Spring Boot
+Setup                   Manual, verbose                 Auto-configuration
+Configuration           XML/Java-based                  Convention over configuration
+Web server              External (Tomcat/Jetty)         Embedded (auto-configured)
+Entry point             None                            @SpringBootApplication
+Starter libs            Not available                   Provides starter dependencies
+
+🛑 Types of Exceptions in Java
+	•	Checked Exceptions: Must be handled or declared (e.g., IOException, SQLException)
+	•	Unchecked Exceptions: Runtime exceptions (e.g., NullPointerException, IndexOutOfBoundsException)
+	•	Errors: Critical problems (e.g., OutOfMemoryError)
+
+⸻
+
+🧭 Exception Hierarchy in Java
+Object
+ └── Throwable
+      ├── Error
+      └── Exception
+           ├── RuntimeException
+           │    └── NullPointerException, IllegalArgumentException...
+           └── IOException, SQLException, etc.
+
+
+ 🏗 Design Patterns in Java
+
+ Common Patterns:
+ 	•	Singleton: One instance per class
+ 	•	Factory: Create objects without exposing instantiation logic
+ 	•	Builder: Build complex objects step by step
+ 	•	Observer: Notify multiple objects of changes
+ 	•	Strategy: Select behavior at runtime
+
+🤖 How Autowiring Works in Spring
+
+Spring automatically injects a bean into a dependent class using annotations:
+@Component
+class Engine {}
+
+@Component
+class Car {
+    @Autowired
+    private Engine engine;
+}
+
+Types of autowiring:
+	•	By Type
+	•	By Name
+	•	Constructor
+	•	@Qualifier: Resolves multiple matching beans
+
+⸻
+
+🔐 What is Spring Security?
+
+Spring Security is a framework for securing Java applications.
+
+Core Features:
+	•	Authentication: Who are you?
+	•	Authorization: Are you allowed to access this?
+	•	Password encoding
+	•	Role-based access control
+	•	OAuth2 / JWT / LDAP integration
+
+Example
+http
+    .authorizeRequests()
+    .antMatchers("/admin/**").hasRole("ADMIN")
+    .anyRequest().authenticated()
+    .and()
+    .formLogin();
+
+
+
+⸻
+
+✅ How to Sort a Map (Java)
+// Sort Map by keys
+Map<String, Integer> map = new HashMap<>();
+map.put("b", 2); map.put("a", 1); map.put("c", 3);
+
+Map<String, Integer> sortedByKey = new TreeMap<>(map);
+
+// Sort Map by values
+map.entrySet()
+   .stream()
+   .sorted(Map.Entry.comparingByValue())
+   .forEach(entry -> System.out.println(entry.getKey() + ": " + entry.getValue()));
+
+
+✅ Find Duplicate Strings in a List
+
+  List<String> list = Arrays.asList("apple", "banana", "apple", "orange", "banana");
+
+  Set<String> seen = new HashSet<>();
+  Set<String> duplicates = list.stream()
+      .filter(s -> !seen.add(s))
+      .collect(Collectors.toSet());
+
+  System.out.println(duplicates); // [apple, banana]
+
+  ✅ Palindrome Check in Java
+  public static boolean isPalindrome(String str) {
+      int left = 0, right = str.length() - 1;
+      while (left < right) {
+          if (str.charAt(left++) != str.charAt(right--)) return false;
+      }
+      return true;
+  }
+
+  ✅ How to Find Server Crash Reasons
+  	1.	Check logs: /var/log/syslog, /var/log/messages, application.log
+  	2.	Look for OOM (Out of Memory) errors: dmesg | grep -i kill
+  	3.	Use journalctl (Linux) for system-level failures.
+  	4.	Application-specific tools (e.g., Spring Actuator, ELK)
+
+
+✅ REST vs SOAP
+
+Feature         REST                    SOAP
+Protocol        HTTP                    HTTP, SMTP, etc.
+Format          JSON, XML               Only XML
+Lightweight     Yes                     No (verbose)
+Standards       None (more flexible)    Strict (WSDL)
+Performance     Fast                    Slower
+
+
+⸻
+
+✅ Why J.P. Morgan? The work and pace might be different.
+
+I’m excited about J.P. Morgan because it operates at the intersection of finance and technology.
+The scale and complexity of its systems offer opportunities to work on challenging real-world problems that truly impact millions.
+I’m aware that the work culture might differ from a typical product company —
+perhaps more structured or regulated — but I actually appreciate that.
+I see it as an opportunity to work in a mature engineering environment where stability,
+ precision, and performance are critical. I’m confident I’ll adapt quickly,
+ and I’m eager to contribute to both new initiatives and the ongoing modernization efforts.
+
+⸻
+
+✅ A situation where I had a disagreement with my manager, how did I handle it?
+
+In one project, I disagreed with my manager on whether to reuse an existing module or build a new one.
+ He preferred reuse due to time constraints, but I felt it would introduce tech debt.
+ Instead of pushing back directly, I collected evidence — benchmarks, code review implications, and long-term maintainability.
+ I presented it in a one-on-one, keeping the discussion solution-focused. Eventually, we aligned on a hybrid approach:
+  reuse some parts, refactor others. The key was staying respectful,
+   focusing on facts, and ensuring the shared goal — delivering a stable, maintainable solution.
+
+⸻
+
+✅ Scenarios where I led a project
+
+I led a backend refactoring project to modernize an outdated service layer used by multiple microservices.
+I handled planning, coordinated with 3 developers, and worked with QA and DevOps to ensure seamless deployment.
+I broke down work into sprints, set up a Slack channel for daily syncs, and created documentation for onboarding.
+The refactor improved performance by 30% and reduced bug reports.
+ This experience strengthened my skills in ownership, coordination, and proactive risk mitigation.
+
+⸻
+
+✅ Any initiative I have taken at work (on-call reduction, sessions, migration, etc.)
+
+I noticed recurring on-call alerts due to outdated health checks and redundant retries.
+ I analyzed logs, identified noisy endpoints, and proposed changes to alert thresholds and retry strategies.
+  After implementing the changes, we reduced false alerts by ~40%.
+I also initiated a weekly “Tech 15” session where we shared short topics — tools, debugging tricks, etc.
+ This improved team collaboration and spread best practices organically.
+Additionally, I led a successful migration from an Oracle DB to PostgreSQL for one service, ensuring compatibility, performance tuning, and zero-downtime rollout.
+
+⸻
+
+✅ How do I handle on-call?
+
+I treat on-call as part of owning a system.
+During on-call, I keep calm, follow structured troubleshooting,
+and aim for quick mitigation before deep root-cause analysis.
+I document fixes to build our knowledge base and identify patterns — if something repeats,
+I work on automation or fixing root causes post-incident. I also collaborate closely with devs/infra to improve monitoring and alerting.
+
+⸻
+
+✅ How do I behave when my design is rejected due to timeline or a senior dev’s alternate approach?
+
+I remind myself that the goal is team success, not ego. If a design I propose is rejected,
+ I listen carefully to the feedback. If it’s due to timelines,
+  I look for ways to simplify or propose a phased approach.
+  If a senior dev suggests something better, I try to learn from it.
+  I may ask clarifying questions,
+  but I never push back emotionally. Ultimately, good design is collaborative — and being open to feedback helps me grow and builds trust within the team.
