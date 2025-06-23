@@ -61,3 +61,81 @@ Simple single-threaded code                     HashMap
 Low concurrency, legacy code                    SynchronizedMap
 High-performance, multi-threaded access         ✅ ConcurrentHashMap
 
+
+import java.util.HashMap;
+
+public class MapExample {
+    public static void main(String[] args) {
+        HashMap<String, Integer> myMap = new HashMap<>();
+
+        myMap.put("apple", 10);
+        myMap.put("banana", 15);
+        myMap.put("cherry", 20);
+        myMap.put("apple", 30); // overwrite
+        myMap.put("pineapple", myMap.get("apple")); // apple = 30
+
+        System.out.println(myMap.size());
+        System.out.println(myMap);
+    }
+}
+
+⸻
+
+✅ Q1: What will be the output?
+
+Let’s analyze:
+	•	"apple" is inserted with 10, then overwritten with 30.
+	•	"pineapple" is added with value myMap.get("apple"), which is 30.
+
+Final entries:
+{
+  "apple"     => 30,
+  "banana"    => 15,
+  "cherry"    => 20,
+  "pineapple" => 30
+}
+Output:
+4
+{banana=15, cherry=20, apple=30, pineapple=30}
+
+(Note: The order may vary because HashMap is not ordered.)
+
+⸻
+
+✅ Q2: Explain internal working of HashMap
+	•	HashMap uses an array of buckets internally (each bucket is a linked list or tree in case of collisions).
+	•	When you call put(key, value):
+	1.	It computes the hashCode of the key.
+	2.	Applies hash function to map hash to an index (bucket).
+	3.	If the bucket is empty → new node is added.
+	4.	If a key exists (equal hash & equals()) → value is updated.
+	5.	If collision occurs (same index, different keys), new entry is chained (or treeified if large).
+
+Java 8+ uses a TreeMap (Red-Black Tree) for buckets with >8 entries to improve performance.
+
+⸻
+
+✅ Q3: Is HashMap thread-safe?
+
+No, HashMap is not thread-safe.
+	•	If multiple threads access and modify a HashMap concurrently without synchronization, it may lead to data inconsistency or infinite loops (especially in Java 7).
+
+For thread-safe usage:
+	•	Use ConcurrentHashMap
+	•	Or wrap with Collections.synchronizedMap(...) (less efficient)
+
+⸻
+
+✅ Q4: What is the initial bucket size of HashMap?
+	•	The default initial capacity of a HashMap is 16 buckets.
+	•	You can customize it using the constructor like: new HashMap<>(32).
+
+⸻
+
+✅ Q5: What is the load factor?
+	•	Load Factor = how full the HashMap can get before it resizes.
+	•	Default is 0.75 (75% full).
+	•	When size >= capacity * loadFactor, the HashMap resizes (doubles).
+
+So, default threshold before resizing:
+threshold = 16 * 0.75 = 12 entries

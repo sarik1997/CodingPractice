@@ -1,10 +1,11 @@
+package TwoDArrayQuestion;
 // A Java program for Dijkstra's single source shortest path
 // algorithm. The program is for adjacency matrix
 // representation of the graph
 
 import java.lang.*;
 
-class ShortestPath {
+class DijkshtraShortestPath {
     // A utility function to find the vertex with minimum distance value, from the set of vertices not yet included in shortest path tree
     static final int V = 6;
 
@@ -26,7 +27,7 @@ class ShortestPath {
                 {0, 3, 0, 0, 0, 2},
                 {0, 1, 0, 0, 0, 3},
                 {0, 6, 0, 2, 3, 0}};
-        ShortestPath t = new ShortestPath();
+        DijkshtraShortestPath t = new DijkshtraShortestPath();
 
         // Function call
         t.dijkstra(graph, 0);

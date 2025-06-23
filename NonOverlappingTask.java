@@ -49,8 +49,27 @@ class NonOverlappingTask {
         // Return the total number of overlapping intervals to be removed
         return overlaps;
     }
+    //return true if overlapping
+    public static boolean hasOverlap(int[][] intervals) {
+        if (intervals == null || intervals.length < 2) return false;
+
+        // Step 1: Sort intervals by start time
+        Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));
+
+        // Step 2: Check for overlaps
+        for (int i = 1; i < intervals.length; i++) {
+            if (intervals[i][0] < intervals[i - 1][1]) {
+                // Current start < previous end → overlap
+                return true;
+            }
+        }
+
+        return false;
+    }
     public static void main(String[] args){
         int[][] intervals = new int[][]{{1,2},{2,3},{3,4},{1,3}};
         System.out.println(eraseOverlapIntervals(intervals));
+        System.out.println(hasOverlap(intervals));
     }
+
 }

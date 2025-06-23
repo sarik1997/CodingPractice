@@ -1,3 +1,5 @@
+package TwoDArrayQuestion;
+
 public class NoOfIslandDFS {
     public static void main(String[] args) {
         char[][] grid = {

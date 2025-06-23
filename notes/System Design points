@@ -2,7 +2,8 @@ Distributed locking is a technique used in distributed systems to ensure that on
 
 🔐 Why Use Distributed Locking?
 
-In a multi-instance or microservices environment, traditional in-memory locks (like Java synchronized or ReentrantLock) won’t work across different nodes. Distributed locking ensures mutual exclusion across a cluster.
+In a multi-instance or microservices environment, traditional in-memory locks (like Java synchronized or ReentrantLock)
+won’t work across different nodes. Distributed locking ensures mutual exclusion across a cluster.
 
 ⸻
 
