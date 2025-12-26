@@ -1,7 +1,7 @@
 1. @PathVariable
 	•	Used to extract values from the URI path.
 	•	Suitable when the value is part of the URL structure.
-	•	Helps in RESTful APIs where the URL represents resources.
+	•	Helps in Restful APIs where the URL represents resources.
 
 Example:
 @RestController

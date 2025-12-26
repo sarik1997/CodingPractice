@@ -122,7 +122,7 @@ http
 Map<String, Integer> map = new HashMap<>();
 map.put("b", 2); map.put("a", 1); map.put("c", 3);
 
-Map<String, Integer> sortedByKey = new TreeMap<>(map);
+Map<String, Integer> sortedByKey = new  <>(map);
 
 // Sort Map by values
 map.entrySet()
@@ -169,66 +169,3 @@ Performance     Fast                    Slower
 
 
 ⸻
-
-✅ Why J.P. Morgan? The work and pace might be different.
-
-I’m excited about J.P. Morgan because it operates at the intersection of finance and technology.
-The scale and complexity of its systems offer opportunities to work on challenging real-world problems that truly impact millions.
-I’m aware that the work culture might differ from a typical product company —
-perhaps more structured or regulated — but I actually appreciate that.
-I see it as an opportunity to work in a mature engineering environment where stability,
- precision, and performance are critical. I’m confident I’ll adapt quickly,
- and I’m eager to contribute to both new initiatives and the ongoing modernization efforts.
-
-⸻
-
-✅ A situation where I had a disagreement with my manager, how did I handle it?
-
-In one project, I disagreed with my manager on whether to reuse an existing module or build a new one.
- He preferred reuse due to time constraints, but I felt it would introduce tech debt.
- Instead of pushing back directly, I collected evidence — benchmarks, code review implications, and long-term maintainability.
- I presented it in a one-on-one, keeping the discussion solution-focused. Eventually, we aligned on a hybrid approach:
-  reuse some parts, refactor others. The key was staying respectful,
-   focusing on facts, and ensuring the shared goal — delivering a stable, maintainable solution.
-
-⸻
-
-✅ Scenarios where I led a project
-
-I led a backend refactoring project to modernize an outdated service layer used by multiple microservices.
-I handled planning, coordinated with 3 developers, and worked with QA and DevOps to ensure seamless deployment.
-I broke down work into sprints, set up a Slack channel for daily syncs, and created documentation for onboarding.
-The refactor improved performance by 30% and reduced bug reports.
- This experience strengthened my skills in ownership, coordination, and proactive risk mitigation.
-
-⸻
-
-✅ Any initiative I have taken at work (on-call reduction, sessions, migration, etc.)
-
-I noticed recurring on-call alerts due to outdated health checks and redundant retries.
- I analyzed logs, identified noisy endpoints, and proposed changes to alert thresholds and retry strategies.
-  After implementing the changes, we reduced false alerts by ~40%.
-I also initiated a weekly “Tech 15” session where we shared short topics — tools, debugging tricks, etc.
- This improved team collaboration and spread best practices organically.
-Additionally, I led a successful migration from an Oracle DB to PostgreSQL for one service, ensuring compatibility, performance tuning, and zero-downtime rollout.
-
-⸻
-
-✅ How do I handle on-call?
-
-I treat on-call as part of owning a system.
-During on-call, I keep calm, follow structured troubleshooting,
-and aim for quick mitigation before deep root-cause analysis.
-I document fixes to build our knowledge base and identify patterns — if something repeats,
-I work on automation or fixing root causes post-incident. I also collaborate closely with devs/infra to improve monitoring and alerting.
-
-⸻
-
-✅ How do I behave when my design is rejected due to timeline or a senior dev’s alternate approach?
-
-I remind myself that the goal is team success, not ego. If a design I propose is rejected,
- I listen carefully to the feedback. If it’s due to timelines,
-  I look for ways to simplify or propose a phased approach.
-  If a senior dev suggests something better, I try to learn from it.
-  I may ask clarifying questions,
-  but I never push back emotionally. Ultimately, good design is collaborative — and being open to feedback helps me grow and builds trust within the team.

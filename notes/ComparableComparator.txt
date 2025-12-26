@@ -13,7 +13,8 @@ import java.util.List;
 
 
 /**✅ Comparable Example
-    You implement this when you want your object to have natural ordering (like alphabetically, numerically, etc.).
+    You implement this when you want your object
+    to have natural ordering (like alphabetically, numerically, etc.).
     🎯 Example: Sort Employees by salary
  */
 

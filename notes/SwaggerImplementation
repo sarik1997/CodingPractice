@@ -1,0 +1,95 @@
+To implement Swagger in a Spring Boot application, you can use Springdoc OpenAPI,
+ which is the recommended way as of Spring Boot 2.6+.
+
+✅ Step-by-Step: Add Swagger (Springdoc OpenAPI 3) to Spring Boot
+📦 1. Add Maven Dependency
+
+Add this to your pom.xml:
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.2.0</version>
+</dependency>
+
+▶️ 2. Run Your App and Open Swagger UI
+
+After starting the app, visit:
+http://localhost:8080/swagger-ui.html
+ or /http://localhost:8080/swagger-ui/index.html
+
+ This will auto-generate Swagger UI for all your REST APIs.
+
+ ⸻
+
+ 📘 3. Use Annotations for Better Docs
+
+ Annotate your controllers and models for clear documentation:
+----------------
+ Example: Controller
+ @RestController
+ @RequestMapping("/api/users")
+ public class UserController {
+
+     @GetMapping("/{id}")
+     @Operation(summary = "Get user by ID", description = "Returns a user for the given ID")
+     public ResponseEntity<User> getUserById(@PathVariable Long id) {
+         // logic
+     }
+
+     @PostMapping
+     @Operation(summary = "Create a new user")
+     public ResponseEntity<User> createUser(@RequestBody User user) {
+         // logic
+     }
+ }
+ -----------------
+Example: Model
+ public class User {
+     @Schema(description = "User's unique ID")
+     private Long id;
+
+     @Schema(description = "Full name of the user")
+     private String name;
+ }
+
+ ------------
+
+⸻
+
+⚙️ 4. (Optional) Customize OpenAPI Info
+@Configuration
+public class OpenAPIConfig {
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+            .info(new Info()
+                .title("My Application API")
+                .version("1.0")
+                .description("This is the API documentation for MyApp"));
+    }
+}
+
+🔒 5. Enable Swagger in Production (Optional)
+
+By default, Springdoc is enabled in all environments.
+If you want to disable in production, control it via profiles:
+# application-prod.yml
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+  ✅ You’re Done!
+
+  Now you have:
+  	•	Interactive Swagger UI
+  	•	OpenAPI JSON spec at /v3/api-docs
+  	•	Clean API documentation with zero extra work
+
+  ⸻
+
+  📦 Bonus (if you’re using Spring Security):
+
+  Add this to permit Swagger endpoints:
+  .antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

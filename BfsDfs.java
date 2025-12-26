@@ -121,16 +121,21 @@ public class BfsDfs {
         root.right = new TreeNode(2);
         root.left.left = new TreeNode(3);
         root.left.right = new TreeNode(4);
-        System.out.println("Inorder traversal");
+        /**
+         *                            0
+         *                         1    2
+         *                        3 4
+         */
+        System.out.println("Inorder traversal");//   3 1 4 0 2
         inorder(root);
 
-        System.out.println("\nPreorder traversal ");//DFS
+        System.out.println("\nPreorder traversal ");//DFS 0 1 3 4 2
         preorder(root);
 
-        System.out.println("\nPostorder traversal"); //reverse BFS
+        System.out.println("\nPostorder traversal"); //reverse BFS 3 4 1 2 0
         postorder(root);
 
-        System.out.println("\nLevelorder traversal");//BFS
+        System.out.println("\nLevelorder traversal");//BFS 0 1 2 3 4
         printLevelOrder(root);
 
         System.out.println("\naverage sum at each level");

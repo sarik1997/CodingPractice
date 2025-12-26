@@ -63,4 +63,40 @@ indexes are special data structures that improve the speed of data retrieval ope
     ETC....
 
 
+    A SQL “join” is an operation that combines data from two or more tables based on a related column,
+    allowing richer and more meaningful results from relational databases.
+    Types of SQL Joins
+    	•	INNER JOIN: Returns only the rows where there is a match in both tables for the specified columns.
+    	•	LEFT JOIN (LEFT OUTER JOIN): Returns all rows from the left table, plus matched rows from the right table. Unmatched rows from the right table show as NULL.
+    	•	RIGHT JOIN (RIGHT OUTER JOIN): Returns all rows from the right table, plus matched rows from the left table. Unmatched rows from the left table show as NULL.
+    	•	FULL JOIN (FULL OUTER JOIN): Returns all rows from both tables. Where there’s no match, NULLs fill the gaps.
+    	•	CROSS JOIN: Produces a Cartesian product—every row from the first table is paired with every row from the second table. Useful for generating all possible combinations.
+    	•	SELF JOIN: Joins a table to itself, often used for hierarchical or recursive relationships, such as employees and their managers within an Employee table.
+    Typical Example
+    Suppose a “Student” table contains student details, and a “Marks” table associates marks with student IDs. An INNER JOIN on the ID lets you see each student with their marks in one result set, only showing students who have marks recorded.
+    Syntax Example
+SELECT a.Name, b.Marks FROM Student a INNER JOIN Marks b ON a.ID = b.StudentID;
+////////// Third highest Salary
+SELECT Salary FROM Employee ORDER BY Salary DESC LIMIT 1 OFFSET 2;
+
+SELECT Salary FROM ( SELECT Salary FROM Employee ORDER BY Salary DESC LIMIT 3) AS temp ORDER BY Salary ASC LIMIT 1;
+
+SELECT * FROM ( SELECT emp_name, Salary, DENSE_RANK() OVER (ORDER BY Salary DESC) AS rnk FROM Employee) AS ranked WHERE rnk = 3;
+
+
+////////The query to get the average of the highest salaries by department for employees who joined after 2021 could look like this:
+SELECT d.dept_name, AVG(highest_salary) AS avg_high_salary
+FROM (
+    SELECT e.dept_id, MAX(s.salary_amount) AS highest_salary
+    FROM employee e
+    JOIN salary s ON e.employee_id = s.employee_id
+    WHERE e.join_date > '2021-12-31'
+    GROUP BY e.dept_id
+) AS dept_highest_salaries
+JOIN department d ON d.dept_id = dept_highest_salaries.dept_id
+GROUP BY d.dept_name;
+
+
+Select standard ,subject from student Group By Standard,subject Havibg MIN(marks)>70;
+
 

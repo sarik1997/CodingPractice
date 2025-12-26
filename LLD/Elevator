@@ -1,0 +1,263 @@
+Designing an Elevator System is a classic LLD (Low-Level Design) interview question — asked frequently at ServiceNow and other product-based companies — to assess your:
+	•	Object-Oriented Design (OOD) skills
+	•	Understanding of state machines, concurrency, and scalability
+	•	Ability to break large systems into modular components
+
+⸻
+
+✅ Problem Statement
+
+Design a software system for a multi-floor elevator system with:
+	•	Multiple elevators
+	•	Each elevator can move up/down
+	•	Users can request from any floor to go up/down
+	•	Elevators must handle internal and external requests
+	•	The system must assign elevators intelligently
+
+⸻
+
+✅ Key OOP Concepts to Use
+	•	Encapsulation – model elevators as objects
+	•	Inheritance/Polymorphism – if you have different elevator types (e.g., service elevator)
+	•	State Pattern / Enum – to model elevator states
+	•	Queueing/Scheduling – for managing requests
+
+⸻
+
+✅ Class Diagram Overview
+
++--------------------+
+| ElevatorSystem     |
++--------------------+
+| - elevators: List<Elevator> |
+| + requestPickup(int floor, Direction dir) |
+| + step()           |
++--------------------+
+
++--------------+
+| Elevator     |
++--------------+
+| - id: int    |
+| - currentFloor: int |
+| - direction: Direction |
+| - state: ElevatorState |
+| - requests: TreeSet<Integer> |
+| + step()     |
+| + addRequest(int floor) |
++--------------+
+
++------------------+
+| enum Direction   |
++------------------+
+| UP, DOWN, IDLE   |
++------------------+
+
++---------------------+
+| enum ElevatorState  |
++---------------------+
+| MOVING, IDLE, DOORS_OPEN |
++---------------------+
+
+✅ Overall Concept
+
+We’re simulating a system where:
+	•	There are multiple elevators.
+	•	People from different floors can request an elevator.
+	•	Each elevator:
+	•	Knows its current floor.
+	•	Has a direction (UP, DOWN, IDLE).
+	•	Maintains a queue of floors to stop at.
+	•	Moves one floor at a time per step.
+	•	Stops and serves the request at the correct floor.
+
+The main components are:
+	•	ElevatorSystem: manages all elevators.
+	•	Elevator: individual elevator with state and logic.
+	•	Enums: Direction and ElevatorState.
+
+
+Used to represent the direction in which an elevator is moving.
+🔹 Direction.java
+public enum Direction {
+    UP, DOWN, IDLE
+}
+
+Represents the status of the elevator:
+	•	IDLE: doing nothing.
+	•	MOVING: traveling up/down.
+	•	DOORS_OPEN: stopped to pick/drop someone.
+
+🔹 ElevatorState.java
+public enum ElevatorState {
+    IDLE, MOVING, DOORS_OPEN
+}
+
+🔹 Elevator.java
+import java.util.TreeSet;
+
+public class Elevator {
+    private int id;
+    private int currentFloor;
+    private Direction direction;
+    private ElevatorState state;
+    private TreeSet<Integer> requests; // Sorted floor requests
+
+    public Elevator(int id) {
+        this.id = id;
+        this.currentFloor = 0;
+        this.direction = Direction.IDLE;
+        this.state = ElevatorState.IDLE;
+        this.requests = new TreeSet<>();
+        ///////
+        	•	Initializes elevator on floor 0
+        	•	Keeps it idle and empty (no requests yet)
+
+    }
+
+//	•	Adds the requested floor to the elevator’s queue.
+  	•	If the elevator is idle, sets direction and starts moving.
+///////////
+    public void addRequest(int floor) {
+        requests.add(floor);
+        if (state == ElevatorState.IDLE) {
+            direction = floor > currentFloor ? Direction.UP : Direction.DOWN;
+            state = ElevatorState.MOVING;
+        }
+    }
+
+/////////////
+	1.	If there are no requests, go idle.
+	2.	Otherwise, find the next target floor based on the direction:
+	•	ceiling(floor): smallest floor ≥ current (for UP)
+	•	floor(floor): largest floor ≤ current (for DOWN)
+	////////////
+    public void step() {
+        if (requests.isEmpty()) {
+            direction = Direction.IDLE;
+            state = ElevatorState.IDLE;
+            return;
+        }
+
+        Integer target = direction == Direction.UP ? requests.ceiling(currentFloor) : requests.floor(currentFloor);
+        if (target == null) target = requests.first();
+//////////
+	3.	If at the target floor → open door and remove the request.
+	4.	Else → move up/down one floor.
+	///////////
+        if (currentFloor == target) {
+            System.out.println("Elevator " + id + " stopped at floor " + currentFloor);
+            requests.remove(currentFloor);
+            state = ElevatorState.DOORS_OPEN;
+        } else {
+            currentFloor += direction == Direction.UP ? 1 : -1;
+            System.out.println("Elevator " + id + " moving " + direction + " to floor " + currentFloor);
+            state = ElevatorState.MOVING;
+        }
+    }
+
+    public boolean isIdle() {
+        return state == ElevatorState.IDLE && requests.isEmpty();
+    }
+
+    public int getCurrentFloor() {
+        return currentFloor;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
+
+    public int getId() {
+        return id;
+    }
+}
+
+🔹 ElevatorSystem.java
+import java.util.*;
+
+public class ElevatorSystem {
+    private List<Elevator> elevators;
+
+    public ElevatorSystem(int numberOfElevators) {
+        elevators = new ArrayList<>();
+        //Initializes a list of elevators.
+        for (int i = 0; i < numberOfElevators; i++) {
+            elevators.add(new Elevator(i));
+        }
+    }
+//	•	When someone presses the elevator button on a floor, this method:
+  	1.	Tries to find an IDLE elevator.
+  	2.	If none found, assigns a default elevator (for simplicity).
+  	3.	Adds the floor to the selected elevator’s request queue.
+///////////////////////////
+    public void requestPickup(int floor, Direction direction) {
+        Elevator bestElevator = null;
+
+        for (Elevator e : elevators) {
+            if (e.isIdle()) {
+                bestElevator = e;
+                break;
+            }
+        }
+
+        if (bestElevator == null) {
+            // fallback: random or nearest
+            bestElevator = elevators.get(0);
+        }
+
+        System.out.println("Assigned Elevator " + bestElevator.getId() + " to floor " + floor);
+        bestElevator.addRequest(floor);
+    }
+
+    public void step() {
+        for (Elevator e : elevators) {
+            e.step();
+        }
+    }
+}
+
+🔹 Main.java (Test Runner)
+public class Main {
+    public static void main(String[] args) throws InterruptedException {
+        ElevatorSystem system = new ElevatorSystem(2);
+
+        system.requestPickup(3, Direction.UP);
+        system.requestPickup(5, Direction.DOWN);
+        system.requestPickup(7, Direction.DOWN);
+
+        for (int i = 0; i < 10; i++) {
+            system.step();
+            Thread.sleep(1000); // Simulate 1 second steps
+        }
+    }
+}
+Assigned Elevator 0 to floor 3
+Assigned Elevator 1 to floor 5
+Assigned Elevator 0 to floor 7
+Elevator 0 moving UP to floor 1
+Elevator 1 moving UP to floor 1
+...
+Elevator 0 stopped at floor 3
+Elevator 1 stopped at floor 5
+...
+
+
+
+Design Choice                       Why?
+TreeSet for requests            Keeps floors sorted automatically
+Direction & State Enums         Clear finite-state-machine style transitions
+step()                              Allows discrete time simulation (clean and testable)
+ElevatorSystem assigns elevators    Separation of responsibility
+
+🚀 Bonus Enhancements (Advanced Topics)
+	•	Use PriorityQueue for nearest elevator scheduling
+	•	Track passenger count or weight limit
+	•	Add UI interaction class for button presses
+	•	Implement a real-time simulator
+
+	1.	🚪 What if someone inside wants to go to a different floor?
+    	•	Support internal buttons, add those to the same requests set.
+    	2.	🧠 How to assign elevators better?
+    	•	Use priority queue based on proximity, load balancing, or predicted paths.
+    	3.	🚨 What if an elevator breaks?
+    	•	Add a status field and remove it from assignment pool.

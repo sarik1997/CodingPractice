@@ -1,4 +1,5 @@
-Thread :- A thread is the smallest unit of execution in a process. A process can have multiple threads running concurrently.
+Thread :- A thread is the smallest unit of execution in a process.
+ A process can have multiple threads running concurrently.
 
 Main Thread:- When a program starts, one thread is automatically created — the main thread.
 

@@ -1,0 +1,314 @@
+✅ WhatsApp LLD: Requirements
+
+🔹 Functional Requirements
+	1.	One-to-one messaging (real-time)
+	2.	Group chat support
+	3.	Message history (persistence)
+	4.	Message delivery/read receipts (✓✓)
+	5.	User online/offline status
+
+🔹 Non-Functional Requirements
+	•	Scalability
+	•	Fault-tolerance
+	•	Low latency (instant delivery)
+	•	End-to-end encryption (optional)
+
+
+	User1 → send message → MessageService
+                      ↓
+             Stored in Chat → NotificationService → Check User2 online
+                                                            ↓
+                                           If online → print "Delivered"
+                                           Else      → simulate push
+
+
++-------------+     1          *    +-------------+
+|    User     |--------------------|   Message    |
++-------------+                   +-------------+
+| id          |                   | id          |
+| name        |                   | content     |
+| status      |                   | timestamp   |
+| contacts    |                   | senderId    |
++-------------+                   | receiverId  |
+                                  +-------------+
+
++-------------+
+|   Chat      |
++-------------+
+| chatId      |
+| List<User>  |
+| messages    |
++-------------+
+
++-----------------+
+| MessageService  |
++-----------------+
+| sendMessage()   |
+| getMessages()   |
+| notify()        |
++-----------------+
+
++-----------------+
+| NotificationSvc |
++-----------------+
+| deliverPush()   |
++-----------------+
+
+We have these main classes:
+	1.	User – Represents a person using WhatsApp.
+	2.	Message – Represents a single message.
+	3.	Chat – A conversation between users (could be 1-1 or group).
+	4.	MessageService – Handles sending, storing, retrieving messages.
+	5.	NotificationService – Simulates real-time delivery (checks if recipient is online).
+
+🔹 User.java
+public class User {
+    private String userId;
+    private String name;
+    private boolean isOnline;
+    private Set<String> contacts;
+
+    public User(String id, String name) {
+        this.userId = id;
+        this.name = name;
+        this.isOnline = false;
+        this.contacts = new HashSet<>();
+    }
+
+    // getters/setters
+}
+🔹 Message.java
+public class Message {
+    private String id;
+    private String content;
+    private String senderId;
+    private String receiverId; // for 1-1 chat
+    private long timestamp;
+    private boolean delivered;
+    private boolean seen;
+
+    public Message(String id, String content, String senderId, String receiverId) {
+        this.id = id;
+        this.content = content;
+        this.senderId = senderId;
+        this.receiverId = receiverId;
+        this.timestamp = System.currentTimeMillis();
+        this.delivered = false;
+        this.seen = false;
+    }
+
+    // getters/setters
+}
+🔹 Chat.java
+public class Chat {
+    private String chatId;
+    private List<String> participantIds;
+    private List<Message> messages;
+
+    public Chat(String chatId, List<String> participantIds) {
+        this.chatId = chatId;
+        this.participantIds = participantIds;
+        this.messages = new ArrayList<>();
+    }
+
+    public void addMessage(Message msg) {
+        messages.add(msg);
+    }
+
+    public List<Message> getMessages() {
+        return messages;
+    }
+
+    // getters
+}
+
+
+⸻
+
+➡️ Sends the message:
+	•	Adds it to the chat.
+	•	Uses NotificationService to check if recipient is online.
+
+🔹 MessageService.java
+public class MessageService {
+    private Map<String, Chat> chats = new HashMap<>();
+    private NotificationService notificationService;
+
+    public MessageService(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
+
+    public void sendMessage(String chatId, Message message) {
+        Chat chat = chats.get(chatId);
+        if (chat == null) {
+            System.out.println("Chat does not exist!");
+            return;
+        }
+        chat.addMessage(message);
+        notificationService.deliverMessage(message);
+    }
+
+    public List<Message> getChatHistory(String chatId) {
+        Chat chat = chats.get(chatId);
+        return chat == null ? Collections.emptyList() : chat.getMessages();
+    }
+
+    public void createChat(String chatId, List<String> userIds) {
+        chats.put(chatId, new Chat(chatId, userIds));
+    }
+}
+
+
+
+➡️ Used by MessageService to check if a message should be:
+	•	Delivered instantly
+	•	Or queued (here just simulated with a print statement)
+
+🔹 NotificationService.java
+public class NotificationService {
+    private Map<String, Boolean> userOnlineStatus = new HashMap<>();
+
+    public void setUserOnline(String userId, boolean online) {
+        userOnlineStatus.put(userId, online);
+    }
+
+    public void deliverMessage(Message message) {
+        if (userOnlineStatus.getOrDefault(message.getReceiverId(), false)) {
+            System.out.println("Delivered to " + message.getReceiverId() + ": " + message.getContent());
+            message.setDelivered(true);
+        } else {
+            System.out.println("User offline. Push notification scheduled.");
+        }
+    }
+}
+
+⸻
+
+✅ Sample Flow
+NotificationService ns = new NotificationService();
+MessageService ms = new MessageService(ns);
+
+List<String> users = List.of("u1", "u2");
+ms.createChat("chat1", users);
+
+ns.setUserOnline("u2", true);
+
+Message msg = new Message("m1", "Hello!", "u1", "u2");
+ms.sendMessage("chat1", msg);
+🖨️ Output:
+Delivered to u2: Hello!
+
+✅ Extensions (for Interviews)
+
+Feature                                 How to Add
+Group chat                              Chat supports multiple participants
+Seen status                             Add seen flag and seenBy set in Message
+Media support                           Add attachmentUrl or MessageType enum
+Encryption                              Simulate with encrypt() and decrypt() methods
+Typing indicator                        Event-based user status stream
+Call feature                            Add Call, CallService, status, start/end timestamps
+
+🧠 1. How would you handle message ordering?
+
+🔹 Problem:
+
+Messages may arrive out of order due to network latency, retries, or server load balancing.
+
+✅ Solutions:
+	1.	Per-chat message sequence ID:
+	•	Use an auto-incrementing counter per chat (or per user).
+	•	Store messageId = (chatId, sequenceNumber).
+	2.	Timestamps with conflict resolution:
+	•	Use a timestamp + senderId (for tie-breakers).
+	•	Not ideal in distributed systems without clock sync.
+	3.	Kafka-like offset:
+	•	Treat messages like log entries in a message queue.
+	•	Consumers read messages in offset order.
+
+✅ At storage and UI, always sort messages based on this sequence.
+
+⸻
+
+🧠 2. How would you scale this for 10M users?
+
+✅ Techniques:
+	1.	Sharded Databases:
+	•	Shard users or chats across multiple DB partitions by userId % N.
+	2.	Microservices:
+	•	Split into services: UserService, ChatService, MessageService, NotificationService.
+	3.	WebSocket clusters:
+	•	Use load balancers + WebSocket gateway servers (each maintaining active connections).
+	•	Sticky sessions or centralized pub/sub (e.g., Redis) for routing.
+	4.	Horizontal scaling:
+	•	Stateless services behind a load balancer (Kubernetes, ECS).
+	•	Scale out based on message rate.
+	5.	Caching:
+	•	Use Redis or Memcached for user presence, recent chats.
+
+⸻
+
+🧠 3. How would you design this in a distributed architecture?
+
+✅ High-level Components:
+[Client]
+   ↓ WebSocket/HTTP
+[API Gateway]
+   ↓
+[Message Router] —→ [Notification Service]
+   ↓
+[Chat Service] —→ DB
+   ↓
+[Message Queue (Kafka/SQS)]
+   ↓
+[Message Processor]
+
+✅ Key Points:
+	•	WebSockets for real-time updates.
+	•	Message Broker (e.g., Kafka) decouples producers and consumers.
+	•	Distributed Cache (e.g., Redis) for presence and unread counts.
+	•	Storage Service writes to durable storage (Cassandra, DynamoDB).
+	•	Replica Databases for read scaling.
+
+⸻
+
+🧠 4. How would you ensure message durability (no loss)?
+
+✅ Solutions:
+	1.	Persistent Queue:
+	•	Use Kafka or RabbitMQ (durable mode).
+	•	Messages are persisted even if consumer is down.
+	2.	Acknowledgment before delete:
+	•	Only delete from queue once it’s acknowledged by receiver or delivery service.
+	3.	Write-ahead logs:
+	•	Append messages to a durable log before storing in DB.
+	4.	Database replication & backups:
+	•	Use multi-AZ, multi-region DB with replication (Cassandra/DynamoDB).
+	5.	Retry queue for failed deliveries.
+
+💡 WhatsApp uses a mix of XMPP, custom protocols, and delivery queues with retry logic.
+
+⸻
+
+🧠 5. How would you handle retries and acknowledgments?
+
+✅ Concept: Reliable delivery protocol
+	1.	ACK mechanism:
+	•	Client sends an acknowledgment when message is received/displayed.
+	•	Server updates message status: Sent → Delivered → Seen.
+	2.	Retry queue:
+	•	Undelivered messages are stored in a retry buffer.
+	•	Retry on intervals with exponential backoff.
+	3.	Idempotent delivery:
+	•	Every message has a unique ID.
+	•	Even if retried, the server/client knows not to duplicate it.
+	4.	Dead-letter queue:
+	•	Messages that fail delivery after N retries are moved to a special queue for debugging or manual recovery.
+
+
+Question                                        Strategy
+Message Ordering                    Use sequence number per chat or offset-based queue
+10M User Scale                      Sharding, load balancing, microservices, cache
+Distributed Design                  WebSockets, Kafka, storage service, message router
+Durability                          Persist queues, ACKs, replication, logs
+Retry & ACK                         Retry buffer, exponential backoff, idempotent messages
+

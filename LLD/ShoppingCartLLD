@@ -1,0 +1,363 @@
+Design summary
+	•	Each user has one cart keyed by userId.
+	•	Cart stored in Redis (fast), optionally persisted to DB on checkout or periodically.
+	•	Concurrency handled with distributed locks (Redisson) on cart:{userId} during updates.
+	•	Notifications to clients via WebSocket (or SSE) when cart changes.
+	•	API is RESTful and idempotent-friendly (supports Idempotency-Key if needed).
+		Concurrency (distributed locking with Redisson + Redis) and persistence details
+    	Extra notes (caching, expiry, idempotency, scaling)
+
+Project structure
+   shopping-cart/
+    ├─ src/main/java/com/example/cart/
+    │   ├─ config/
+    │   │   ├─ RedisConfig.java
+    │   │   └─ RedissonConfig.java
+    │   ├─ controller/
+    │   │   └─ CartController.java
+    │   ├─ dto/
+    │   │   └─ CartDto, CartItemDto, AddItemRequest...
+    │   ├─ entity/
+    │   │   └─ Product.java (persisted in RDBMS)
+    │   ├─ model/
+    │   │   └─ ShoppingCart.java, CartItem.java (used in Redis)
+    │   ├─ repository/
+    │   │   └─ ProductRepository.java
+    │   ├─ service/
+    │   │   └─ CartService.java, ProductService.java
+    │   └─ ShoppingCartApplication.java
+    └─ resources/
+        └─ application.yml
+
+   Key domain models
+
+   // model/CartItem.java  (used inside Redis cart)
+   public class CartItem implements Serializable {
+       private String productId;
+       private String name;
+       private double price;
+       private int quantity;
+
+       // constructors, getters, setters
+
+       public double getTotal() { return price * quantity; }
+   }
+
+   // model/ShoppingCart.java  (stored as value in Redis)
+  package com.example.cart.model;
+
+  import java.io.Serializable;
+  import java.util.HashMap;
+  import java.util.Map;
+
+  public class ShoppingCart implements Serializable {
+
+      private String userId;
+      private Map<String, CartItem> items = new HashMap<>(); //useful for iteration and search
+      private long version = 0; // useful for optimistic locking or debugging
+
+      // Add item to the cart
+      public void addItem(Product product, int quantity) {
+          if (product == null || quantity <= 0) {
+              return; // invalid input, do nothing
+          }
+
+          String productId = product.getId();
+          CartItem existingItem = items.get(productId);
+
+          if (existingItem != null) {
+              // Product already in cart — just increase the quantity
+              int newQty = existingItem.getQuantity() + quantity;
+              existingItem.setQuantity(newQty);
+          } else {
+              // Add new item to the cart
+              CartItem newItem = new CartItem(
+                      productId,
+                      product.getName(),
+                      product.getPrice(),
+                      quantity
+              );
+              items.put(productId, newItem);
+          }
+
+          version++;
+      }
+
+      // Remove an item completely from the cart
+      public void removeItem(String productId) {
+          if (productId == null || productId.isEmpty()) {
+              return;
+          }
+
+          if (items.containsKey(productId)) {
+              items.remove(productId);
+              version++;
+          }
+      }
+
+      // Update the quantity of an existing item
+      public void updateItemQuantity(String productId, int newQuantity) {
+          if (productId == null || productId.isEmpty()) {
+              return;
+          }
+
+          CartItem existingItem = items.get(productId);
+
+          if (existingItem == null) {
+              return; // product not found
+          }
+
+          if (newQuantity <= 0) {
+              // If quantity is 0 or less → remove the item
+              items.remove(productId);
+          } else {
+              existingItem.setQuantity(newQuantity);
+          }
+
+          version++;
+      }
+
+      // Calculate total price of all items in the cart
+      public double getTotalPrice() {
+          double total = 0.0;
+
+          for (CartItem item : items.values()) {
+              total += item.getTotal(); // price * quantity
+          }
+
+          return total;
+      }
+  }
+
+   // entity/Product.java
+   @Entity
+   public class Product {
+       @Id
+       private String id;
+       private String name;
+       private double price;
+       // other fields, getters/setters
+   }
+
+   // dto/AddItemRequest.java
+   public class AddItemRequest {
+       private String productId;
+       private int quantity;
+       // getter/setter
+   }
+
+   // dto/CartDto.java
+   public class CartDto {
+       private String userId;
+       private List<CartItemDto> items;
+       private double total;
+   }
+
+Repositories
+// repository/ProductRepository.java
+public interface ProductRepository extends JpaRepository<Product, String> {}
+
+Redis + Redisson Config (Spring Boot)
+// config/RedisConfig.java
+@Configuration
+public class RedisConfig {
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String,Object> tpl = new RedisTemplate<>();
+        tpl.setConnectionFactory(factory);
+        tpl.setKeySerializer(new StringRedisSerializer());
+        tpl.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        return tpl;
+    }
+}
+// config/RedissonConfig.java
+@Configuration
+public class RedissonConfig {
+    @Bean(destroyMethod = "shutdown")
+    public RedissonClient redissonClient() {
+        Config config = new Config();
+        config.useSingleServer().setAddress("redis://127.0.0.1:6379");
+        return Redisson.create(config);
+    }
+}
+
+CartRepository (Redis-backed)
+
+Simple wrapper around RedisTemplate for get/save/delete.
+
+@Component
+public class RedisCartRepository {
+    private final RedisTemplate<String,Object> redisTemplate;
+    private final String prefix = "cart:";
+
+    public RedisCartRepository(RedisTemplate<String,Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    public ShoppingCart getCart(String userId) {
+        return (ShoppingCart) redisTemplate.opsForValue().get(prefix + userId);
+    }
+
+    public void saveCart(ShoppingCart cart) {
+        redisTemplate.opsForValue().set(prefix + cart.getUserId(), cart);
+    }
+
+    public void deleteCart(String userId) {
+        redisTemplate.delete(prefix + userId);
+    }
+}
+
+CartService — with Redisson lock
+
+@Service
+public class CartService {
+
+    private final RedisCartRepository cartRepo;
+    private final ProductRepository productRepo;
+    private final RedissonClient redisson;
+
+    public CartService(RedisCartRepository cartRepo, ProductRepository productRepo, RedissonClient redisson) {
+        this.cartRepo = cartRepo;
+        this.productRepo = productRepo;
+        this.redisson = redisson;
+    }
+
+    public ShoppingCart getCart(String userId) {
+        ShoppingCart cart = cartRepo.getCart(userId);
+        if (cart == null) {
+            cart = new ShoppingCart();
+            cart.setUserId(userId);
+            cartRepo.saveCart(cart);
+        }
+        return cart;
+    }
+
+    public void addItem(String userId, String productId, int qty) {
+        String lockKey = "lock:cart:" + userId;
+        RLock lock = redisson.getLock(lockKey);
+        boolean acquired = false;
+        try {
+            acquired = lock.tryLock(3, 5, TimeUnit.SECONDS); // wait up to 3s, lease 5s
+            if (!acquired) {
+                throw new IllegalStateException("Could not acquire cart lock");
+            }
+            ShoppingCart cart = getCart(userId);
+
+            Product p = productRepo.findById(productId)
+                    .orElseThrow(() -> new NoSuchElementException("Product not found"));
+            cart.addItem(p, qty);
+            cartRepo.saveCart(cart);
+
+            // optionally publish cart-updated event (websocket/kafka)
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } finally {
+            if (acquired && lock.isHeldByCurrentThread()) lock.unlock();
+        }
+    }
+
+    public void removeItem(String userId, String productId) {
+        String lockKey = "lock:cart:" + userId;
+        RLock lock = redisson.getLock(lockKey);
+        boolean acquired = false;
+        try {
+            acquired = lock.tryLock(3, 5, TimeUnit.SECONDS);
+            if (!acquired) throw new IllegalStateException("Could not acquire cart lock");
+            ShoppingCart cart = getCart(userId);
+            cart.getItems().remove(productId);
+            cartRepo.saveCart(cart);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            if (acquired && lock.isHeldByCurrentThread()) lock.unlock();
+        }
+    }
+
+    public double getTotal(String userId) {
+        ShoppingCart cart = getCart(userId);
+        return cart.getItems().values().stream().mapToDouble(CartItem::getTotal).sum();
+    }
+
+    // checkout, merge, persist, etc.
+}
+
+Controller (REST endpoints)
+@RestController
+@RequestMapping("/api/cart")
+public class CartController {
+
+    private final CartService cartService;
+    public CartController(CartService cartService) { this.cartService = cartService; }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<CartDto> getCart(@PathVariable String userId) {
+        ShoppingCart cart = cartService.getCart(userId);
+        return ResponseEntity.ok(toDto(cart));
+    }
+
+    @PostMapping("/{userId}/items")
+    public ResponseEntity<Void> addItem(@PathVariable String userId, @RequestBody AddItemRequest req,
+                                        @RequestHeader(value="Idempotency-Key", required=false) String idempotencyKey) {
+        // Optionally process idempotencyKey
+        cartService.addItem(userId, req.getProductId(), req.getQuantity());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("/{userId}/items/{productId}")
+    public ResponseEntity<Void> removeItem(@PathVariable String userId, @PathVariable String productId) {
+        cartService.removeItem(userId, productId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // helper to convert model -> dto
+    private CartDto toDto(ShoppingCart cart) {
+        CartDto dto = new CartDto();
+        dto.setUserId(cart.getUserId());
+        dto.setItems(cart.getItems().values().stream()
+               .map(ci -> new CartItemDto(ci.getProductId(), ci.getName(), ci.getPrice(), ci.getQuantity()))
+               .collect(Collectors.toList()));
+        dto.setTotal(cart.getItems().values().stream().mapToDouble(CartItem::getTotal).sum());
+        return dto;
+    }
+}
+
+application.yml (example)
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/shop
+    username: app
+    password: secret
+  redis:
+    host: 127.0.0.1
+    port: 6379
+
+
+    Important production considerations
+    	1.	Locking
+    	•	Redisson (above) handles single-node Redis case. For increased safety, run Redis Sentinel/Cluster.
+    	•	Keep lock lease times short; refresh if operation can take longer.
+    	2.	Optimistic Alternatives
+    	•	Use optimistic locking (version field) on cart persisted entity: update only if version matches; retry on conflict.
+    	3.	Expiry / TTL
+    	•	Set TTL for anonymous carts: redisTemplate.expire(key, 30, TimeUnit.DAYS) or similar.
+    	4.	Persistence
+    	•	Persist cart to DB on checkout or periodically (background task) to avoid data loss if Redis flushed.
+    	5.	Idempotency
+    	•	For add/remove requests, support Idempotency-Key header to avoid duplicate processing when clients retry.
+    	6.	Eventing / Sync
+    	•	Publish cart-updated events (Kafka or Redis Pub/Sub). WebSocket microservice subscribes and pushes updates to connected clients.
+    	7.	Scale
+    	•	API servers are stateless. Redis and DB scaled independently. Use consistent hashing if sharding carts.
+    	8.	Security
+    	•	Ensure userId is validated / belongs to authenticated user (use JWT or session).
+    	9.	Partial Failures
+    	•	Make cart updates idempotent and retryable. If lock acquired but save fails, ensure cleanup.
+
+    Sequence (Add item from two devices)
+    	1.	Device A sends POST /api/cart/123/items → request hits Server X.
+    	2.	Server X acquires lock:cart:123 (Redisson).
+    	3.	Server X reads cart from Redis, updates, saves cart, releases lock.
+    	4.	Server X publishes cart-updated event.
+    	5.	Device B sends another add → Server Y tries to acquire lock, waits until Server X releases.
+    	6.	Server Y acquires, merges update, saves, publishes — both devices now see consistent cart.

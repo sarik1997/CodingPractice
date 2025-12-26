@@ -1,0 +1,168 @@
+✅ Problem Statement
+Design a Rate Limiter that:
+	•	Allows at most N requests per T seconds.
+	•	Drops/rejects requests if the rate exceeds the allowed limit.
+	•	Should be efficient and thread-safe.
+🧠 Real-World Example
+	•	API Gateway: Prevent a user from making more than 100 requests per minute.
+	•	Login Attempts: Limit brute-force attacks.
+
+✅ Design Approach: Token Bucket Algorithm
+
+📌 Core Idea:
+	•	Each user has a bucket of tokens.
+	•	The bucket:
+	•	Has a max size (i.e. max allowed requests in a window).
+	•	Refills over time at a fixed rate (tokens per second).
+	•	Each request consumes a token.
+	•	If the bucket is empty, reject the request.
+
+⸻
+
+✅ Class Design
+
+🔶 Class: TokenBucketRateLimiter
+
+🔸 Fields:
+Field                               Type                        Description
+capacity                            int                         Max tokens in the bucket
+tokens                              double                      Current token count
+refillRate                          double                      Tokens per millisecond
+lastRefillTimestamp                 long                        Last refill time in ms
+
+
++---------------------------+
+| TokenBucketRateLimiter    |
++---------------------------+
+| - capacity: int           |
+| - tokens: double          |
+| - refillRatePerMs: double |
+| - lastRefillTimestamp: long |
+| - lock: ReentrantLock     |
++---------------------------+
+| + allowRequest(): boolean |
+| - refillTokens(): void    |
++---------------------------+
+import java.util.concurrent.locks.ReentrantLock;
+
+public class TokenBucketRateLimiter {
+
+    private final int capacity;//🔹 Maximum number of tokens the bucket can hold (i.e., the burst limit).
+    private double tokens; //🔹 The current number of tokens available in the bucket (can be fractional for accuracy).
+    private final double refillRatePerMs; //🔹 How many tokens to add per millisecond.
+                                            If you want 5 requests per second → refill rate = 5 / 1000 = 0.005 tokens/ms.
+    private long lastRefillTimestamp; //🔹 The last time the bucket was refilled. This helps calculate how many tokens to refill lazily.
+
+    private final ReentrantLock lock = new ReentrantLock();  //🔹 Ensures thread safety. Multiple threads might call allowRequest() at the same time.
+
+    public TokenBucketRateLimiter(int capacity, double refillRatePerSecond) {
+        this.capacity = capacity;
+        this.tokens = capacity;
+        this.refillRatePerMs = refillRatePerSecond / 1000.0;
+        this.lastRefillTimestamp = System.currentTimeMillis();
+        //When you create a TokenBucketRateLimiter object:
+          	•	Set the max capacity.
+          	•	Set the refill rate.
+          	•	Fill the bucket with capacity tokens initially.
+          	•	Record the current timestamp for later refill calculations.
+
+    }
+
+
+✅ This allowRequest is the main method:
+	1.	Acquire a lock to prevent race conditions.
+	2.	Refill tokens based on how much time has passed.
+	3.	If there’s at least 1 token:
+	•	Allow the request
+	•	Subtract 1 token
+	4.	Else, block the request.
+
+    public boolean allowRequest() {
+        lock.lock();
+        try {
+            refillTokens();
+
+            if (tokens >= 1) {
+                tokens -= 1;
+                return true;
+            } else {
+                return false; // rate limit exceeded
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+//✅ This refillTokens method calculates how many tokens should be refilled since the last refill:
+  	1.	Calculate elapsed time since last refill.
+  	2.	Calculate how many tokens to add: elapsedTime * refillRatePerMs.
+  	3.	Add tokens to the bucket (but don’t exceed capacity).
+  	4.	Update lastRefillTimestamp to now.
+
+    private void refillTokens() {
+        long now = System.currentTimeMillis();
+        long elapsedTime = now - lastRefillTimestamp;
+
+        double refillAmount = elapsedTime * refillRatePerMs;
+        tokens = Math.min(capacity, tokens + refillAmount);
+
+        lastRefillTimestamp = now;
+    }
+}
+
+public class RateLimiterDemo {
+    public static void main(String[] args) throws InterruptedException {
+        // Allow 5 requests per second
+        TokenBucketRateLimiter limiter = new TokenBucketRateLimiter(5, 5);
+
+        for (int i = 1; i <= 10; i++) {
+            boolean allowed = limiter.allowRequest();
+            System.out.println("Request " + i + ": " + (allowed ? "Allowed" : "Blocked"));
+            Thread.sleep(100); // simulate request every 100ms
+        }
+    }
+}
+
+📈 Visual Example
+
+Suppose:
+	•	Capacity = 5 tokens
+	•	Rate = 5 tokens/sec → 0.005 tokens/ms
+
+Request Timeline:
+
+Time (ms)                   Tokens Before           Action              Tokens After
+0                              5                Request 1 → ✅           4
+100                         4.5 (refilled)      Request 2 → ✅           3.5
+1500                        5 (refilled)        Request 3 → ✅           4
+1600                          4.1               Request 4 → ✅           3.1
+
+
+Request 1: Allowed
+Request 2: Allowed
+Request 3: Allowed
+Request 4: Allowed
+Request 5: Allowed
+Request 6: Blocked
+The 6th request is blocked because the bucket ran out of tokens.
+
+🔧 LLD Considerations
+Aspect                      Explanation
+Concurrency                 Use ReentrantLock or synchronized for thread safety
+Scalability                 For per-user limits, use Map<UserId, TokenBucketRateLimiter>
+Accuracy                    Use System.nanoTime() for precision in production-grade systems
+Refill strategy             Can use lazy refill (as above) or background refill thread
+
+
+Operation               Time                    Space
+allowRequest            O(1)                    O(1) per user
+refillTokens            O(1)                    N/A
+
+
+2.	Sliding Window Log / Leaky Bucket Alternatives (comparison)
+	3.	Distributed Rate Limiting:
+	•	Use Redis + Lua scripts
+	•	Microservice-safe
+	4.	Asynchronous Buckets:
+	•	ScheduledExecutor to refill periodically instead of lazy refill
+
