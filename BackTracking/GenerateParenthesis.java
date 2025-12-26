@@ -2,7 +2,7 @@ package BackTracking;
 
 import java.util.ArrayList;
 import java.util.List;
-
+// make a tree first . Backtrack is always DFS.
 public class GenerateParenthesis {
     static List<String> result = new ArrayList<>();
     static int pairCount;
@@ -14,10 +14,12 @@ public class GenerateParenthesis {
     }
 
     private static void backtrack(int openCount, int closeCount, String currentString) {
-        if (openCount > pairCount || closeCount > pairCount || openCount < closeCount) {
+//        if (openCount > pairCount || closeCount > pairCount|| openCount < closeCount) {
+        if (openCount > pairCount || openCount < closeCount) {
             return;
         }
-        if (openCount == pairCount && closeCount == pairCount) {
+//        if (closeCount == pairCount && openCount == pairCount) {
+        if (closeCount == pairCount) {
             result.add(currentString);
             return;
         }
@@ -29,6 +31,6 @@ public class GenerateParenthesis {
 
     public static void main(String[] args) {
         System.out.println(generateParenthesis(2));
-        System.out.println(generateParenthesis(1));
+        System.out.println(generateParenthesis(3));
     }
 }
