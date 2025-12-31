@@ -2,19 +2,25 @@ package TwoDArrayQuestion;
 
 public class NoOfIslandDFS {
     public static void main(String[] args) {
-        char[][] grid = {
-                { '1', '1', '0', '0', '0' },
-                { '0', '1', '0', '0', '1' },
-                { '1', '0', '0', '1', '1' },
-                { '0', '0', '0', '0', '0' },
-                { '1', '0', '1', '1', '0' }
-        };
+        char[][] grid =
+                {{'1', '1', '0', '0', '0'},
+                {'0', '1', '0', '0', '1'},
+                {'1', '0', '1', '1', '0'},
+                {'0', '0', '0', '0', '0'},
+                {'1', '0', '1', '1', '0'}};
+        char[][] grid1 =
+                {{'1', '1', '0', '0', '0'},
+                        {'0', '1', '0', '0', '1'},
+                        {'1', '0', '1', '1', '0'},
+                        {'0', '0', '0', '0', '0'},
+                        {'1', '0', '1', '1', '0'}};
 
-        System.out.println(numIslands(grid));
+        System.out.println(numIslands1(grid1));
+        System.out.println(numIslands(grid));//Easier to undestand
     }
 
     // Method to count the number of islands in the given grid
-    public static int numIslands(char[][] grid) {
+    public static int numIslands1(char[][] grid) {
         int numRows = grid.length;
         int numCols = grid[0].length;
 
@@ -26,7 +32,7 @@ public class NoOfIslandDFS {
                 // If cell contains '1', it is part of an island
                 if (grid[i][j] == '1') {
                     // Use DFS to mark the entire island as visited
-                    depthFirstSearch(grid,i, j,numCols,numRows);
+                    depthFirstSearch(grid, i, j, numCols, numRows);
                     // Increase the island count
                     ++numIslands;
                 }
@@ -36,7 +42,7 @@ public class NoOfIslandDFS {
     }
 
     // Helper method to perform DFS to mark all cells of an island as visited
-    private static void depthFirstSearch(char[][] grid, int row, int col,int numCols, int numRows) {
+    private static void depthFirstSearch(char[][] grid, int row, int col, int numCols, int numRows) {
         // Mark the current cell as visited by setting it to '0'
         grid[row][col] = '0';
 
@@ -50,8 +56,47 @@ public class NoOfIslandDFS {
             // Check boundaries and if the adjacent cell is part of an island
             if (newRow >= 0 && newRow < numRows && newCol >= 0 && newCol < numCols && grid[newRow][newCol] == '1') {
                 // Continue DFS exploration for the adjacent cell
-                depthFirstSearch(grid, newRow, newCol,numCols,numRows);
+                depthFirstSearch(grid, newRow, newCol, numCols, numRows);
             }
         }
+    }
+
+    public static int numIslands(char[][] grid) {
+        if (grid == null || grid.length == 0) {
+            return 0;
+        }
+
+        int rows = grid.length;
+        int cols = grid[0].length;
+        int islandCount = 0;
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (grid[i][j] == '1') {
+                    islandCount++;
+                    dfs(grid, i, j);
+                }
+            }
+        }
+
+        return islandCount;
+    }
+
+    private static void dfs(char[][] grid, int i, int j) {
+        // boundary & water check
+        if (i < 0 || i >= grid.length || j < 0 || j >= grid[0].length || grid[i][j] == '0') {
+            return;
+        }
+
+        // mark as visited
+        grid[i][j] = '0';
+
+        // explore all 4 directions
+        dfs(grid, i + 1, j); // down
+        dfs(grid, i - 1, j); // up
+        dfs(grid, i, j + 1); // right
+        dfs(grid, i, j - 1); // left
+    }
+
 }
-}
+

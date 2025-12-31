@@ -1,3 +1,5 @@
+package LinkedList;
+
 class MyLinkedList {
     class ListNode {
         int val;

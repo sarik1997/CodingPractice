@@ -15,33 +15,32 @@ import java.util.*;
  * Each number in candidates may only be used once in each combination.
  */
 public class CombinationSum2 {
-
     public List<List<Integer>> combinationSum2(int[] candidates, int target) {
-        List<List<Integer>> results = new ArrayList<>();
-        Arrays.sort(candidates); // Sort to handle duplicates
-        backtrack(candidates, target, 0, new ArrayList<>(), results);
-        return results;
+        List<Integer> curr = new ArrayList<>();
+        List<List<Integer>> result = new ArrayList<>();
+        Arrays.sort(candidates);
+        backtrack(candidates, curr, target, result, 0);
+        return result;
     }
-
-    private void backtrack(int[] candidates, int target, int start,
-                           List<Integer> combination, List<List<Integer>> results) {
-        if (target == 0) {
-            results.add(new ArrayList<>(combination));
+    public void backtrack(int[] candidates, List<Integer> curr,int remSum,List<List<Integer>> result ,int index){
+        if(remSum == 0){
+            result.add(new ArrayList<>(curr));
             return;
         }
-
-        for (int i = start; i < candidates.length; i++) {
-            // Skip duplicates at same level
-            if (i > start && candidates[i] == candidates[i - 1]) continue;
-
-            if (candidates[i] > target) break; // Prune the search
-
-            combination.add(candidates[i]);
-            backtrack(candidates, target - candidates[i], i + 1, combination, results); // i+1 to not reuse same number
-            combination.remove(combination.size() - 1); // backtrack
+        if(index >= candidates.length  || remSum < 0 ){
+            return;
         }
-    }
+        curr.add(candidates[index]);
+        backtrack(candidates, curr, remSum - candidates[index], result, index +1);
+        curr.remove(curr.size() - 1);
+        index++;
+        while(index < candidates.length && candidates[index] == candidates[index-1]) {
+            index++;
+        }
 
+        backtrack(candidates, curr, remSum , result, index);
+
+    }
     // Test
     public static void main(String[] args) {
         CombinationSum2 solver = new CombinationSum2();
