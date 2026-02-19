@@ -228,7 +228,6 @@ If you want the SingletonBean to always receive a new instance of PrototypeBean 
 @Component
 @Scope("singleton")
 public class SingletonBean {
-
     private final ObjectFactory<PrototypeBean> prototypeBeanFactory;
 
     @Autowired
