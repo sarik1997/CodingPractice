@@ -109,7 +109,6 @@ Output:
 	2.	Applies hash function to map hash to an index (bucket).
 	3.	If the bucket is empty → new node is added.
 	4.	If a key exists (equal hash & equals()) → value is updated.
-	5.	If collision occurs (same index, different keys), new entry is chained (or treeified if large).
 
 Java 8+ uses a TreeMap (Red-Black Tree) for buckets with >8 entries to improve performance.
 

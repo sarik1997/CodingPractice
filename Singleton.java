@@ -3,12 +3,13 @@ class Singleton {
     private static Singleton single_instance = null;
 
     // Declaring a variable of type String
-    public String s;
+//    public String s;
 
     // Here we will be creating private constructor restricted to this class itself
     private Singleton()
     {
-        s = "Hello I am a string part of Singleton class";
+
+//        s = "Hello I am a string part of Singleton class";
     }
     // Static method to create instance of Singleton class
     public static synchronized Singleton getInstance()

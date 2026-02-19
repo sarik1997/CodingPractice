@@ -62,7 +62,9 @@ class Geeks
 }
 
 /**
- * The String Pool (also called the intern pool) is a special memory region in Java that stores unique string literals to save memory and improve performance.
+ * The String Pool (also called the intern pool) is a
+ * special memory region in Java that stores
+ * unique string literals to save memory and improve performance.
  *
  * 🧠 What It Does:
  *

@@ -97,6 +97,6 @@ JOIN department d ON d.dept_id = dept_highest_salaries.dept_id
 GROUP BY d.dept_name;
 
 
-Select standard ,subject from student Group By Standard,subject Havibg MIN(marks)>70;
+Select standard ,subject from student Group By Standard,subject Having MIN(marks)>70;
 
 

@@ -1,8 +1,11 @@
-Distributed locking is a technique used in distributed systems to ensure that only one process (or thread) can access a shared resource at a time, across multiple nodes or services. It is crucial when coordinating access to resources like databases, files, or caches to prevent race conditions and maintain data consistency.
+Distributed locking is a technique used in distributed systems to ensure that only one process (or thread)
+can access a shared resource at a time, across multiple nodes or services. It is crucial when coordinating acces
+s to resources like databases, files, or caches to prevent race conditions and maintain data consistency.
 
 🔐 Why Use Distributed Locking?
 
-In a multi-instance or microservices environment, traditional in-memory locks (like Java synchronized or ReentrantLock)
+In a multi-instance or microservices environment, traditional in-memory locks
+(like Java synchronized or ReentrantLock)
 won’t work across different nodes. Distributed locking ensures mutual exclusion across a cluster.
 
 ⸻

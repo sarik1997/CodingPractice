@@ -1,4 +1,4 @@
-package ArraysQuestions;
+package BackTracking;
 
 import java.util.*;
 
